@@ -12,3 +12,6 @@ export {
   saveAppConfig,
 } from './vault';
 export type { TaskdownConfig, AppConfig, VaultInitResult } from './vault';
+
+export { QueryProvider, queryClient } from './queryClient';
+export { queryKeys } from './queryKeys';

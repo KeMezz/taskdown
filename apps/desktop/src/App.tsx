@@ -1,10 +1,133 @@
 import { useEffect, useState } from 'react';
-import { useAppStore } from './stores';
-import { tryAutoLoadVault } from './lib';
+import { useAppStore, useSidebarStore, useTaskStore } from './stores';
+import { tryAutoLoadVault, QueryProvider } from './lib';
 import { VaultSetup } from './features/vault';
+import { MainLayout } from './features/layout';
+import {
+  useProjects,
+  useCreateProject,
+  ProjectDialog,
+} from './features/projects';
+import {
+  useTasks,
+  useCreateTask,
+  useUpdateTaskStatus,
+} from './features/tasks';
+import { InboxView, ProjectView, SettingsView } from './views';
 
 function AppContent() {
-  const { isReadOnly, migrationError, vaultPath } = useAppStore();
+  const { isReadOnly, migrationError } = useAppStore();
+  const { selectedProjectId, selectProject } = useSidebarStore();
+  const { selectTask } = useTaskStore();
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
+
+  // 프로젝트 데이터
+  const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
+  const createProject = useCreateProject();
+
+  // 현재 프로젝트
+  const currentProject =
+    selectedProjectId && selectedProjectId !== '__settings__'
+      ? projects.find((p) => p.id === selectedProjectId)
+      : null;
+
+  // 태스크 데이터 (Inbox 또는 프로젝트)
+  const effectiveProjectId =
+    selectedProjectId === '__settings__' ? null : selectedProjectId;
+  const { data: tasks = [], isLoading: isLoadingTasks } = useTasks(effectiveProjectId);
+  const createTask = useCreateTask();
+  const updateTaskStatus = useUpdateTaskStatus();
+
+  const handleNewProject = () => {
+    if (isReadOnly) return;
+    setIsProjectDialogOpen(true);
+  };
+
+  const handleCreateProject = async (data: { name: string; color: string }) => {
+    if (isReadOnly) return;
+    const project = await createProject.mutateAsync(data);
+    selectProject(project.id);
+  };
+
+  const handleNewTask = (title: string) => {
+    if (isReadOnly) return;
+    createTask.mutate({
+      title,
+      projectId: effectiveProjectId,
+    });
+  };
+
+  const handleTaskClick = (taskId: string) => {
+    selectTask(taskId);
+    // TODO: Phase 5에서 상세 패널 구현
+  };
+
+  const handleTaskStatusChange = (taskId: string, status: 'backlog' | 'next' | 'waiting' | 'done') => {
+    if (isReadOnly) return;
+    updateTaskStatus.mutate({
+      id: taskId,
+      status,
+      projectId: effectiveProjectId,
+    });
+  };
+
+  // 키보드 단축키
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().includes('MAC');
+      const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+
+      if (cmdOrCtrl && e.key === 'n' && !e.shiftKey) {
+        e.preventDefault();
+        // 새 태스크 입력 필드에 포커스 (QuickTaskInput에서 처리)
+        const input = document.querySelector<HTMLInputElement>('[placeholder*="새 태스크"]');
+        input?.focus();
+      }
+
+      if (cmdOrCtrl && e.shiftKey && e.key === 'N') {
+        e.preventDefault();
+        handleNewProject();
+      }
+
+      if (cmdOrCtrl && e.key === ',') {
+        e.preventDefault();
+        selectProject('__settings__');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectProject, isReadOnly]);
+
+  const renderCurrentView = () => {
+    if (selectedProjectId === '__settings__') {
+      return <SettingsView />;
+    }
+
+    if (currentProject) {
+      return (
+        <ProjectView
+          project={currentProject}
+          tasks={tasks}
+          onNewTask={handleNewTask}
+          onTaskClick={handleTaskClick}
+          onTaskStatusChange={handleTaskStatusChange}
+          isLoading={isLoadingTasks}
+        />
+      );
+    }
+
+    // Inbox view (default)
+    return (
+      <InboxView
+        tasks={tasks}
+        onNewTask={handleNewTask}
+        onTaskClick={handleTaskClick}
+        onTaskStatusChange={handleTaskStatusChange}
+        isLoading={isLoadingTasks}
+      />
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -15,13 +138,19 @@ function AppContent() {
           </p>
         </div>
       )}
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Taskdown</h1>
-          <p className="text-gray-600 mb-2">GTD 기반 할 일 관리 앱</p>
-          <p className="text-sm text-gray-500">Vault: {vaultPath}</p>
-        </div>
-      </div>
+      <MainLayout
+        projects={projects}
+        onNewProject={handleNewProject}
+        isLoadingProjects={isLoadingProjects}
+      >
+        {renderCurrentView()}
+      </MainLayout>
+
+      <ProjectDialog
+        isOpen={isProjectDialogOpen}
+        onClose={() => setIsProjectDialogOpen(false)}
+        onSubmit={handleCreateProject}
+      />
     </div>
   );
 }
@@ -88,7 +217,11 @@ function App() {
     return <VaultSetup />;
   }
 
-  return <AppContent />;
+  return (
+    <QueryProvider>
+      <AppContent />
+    </QueryProvider>
+  );
 }
 
 export default App;

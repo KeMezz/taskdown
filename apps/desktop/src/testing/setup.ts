@@ -1,2 +1,2 @@
-import "@testing-library/dom";
+import "@testing-library/jest-dom/vitest";
 import "./mocks/tauri";
