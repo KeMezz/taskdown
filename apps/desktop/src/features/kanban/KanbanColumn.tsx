@@ -56,7 +56,7 @@ export function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col min-w-[260px] max-w-[300px] flex-1 rounded-lg ${config.bgColor} ${
+      className={`flex flex-col min-w-[260px] max-w-[300px] min-h-[400px] flex-1 rounded-lg ${config.bgColor} ${
         isOver ? 'ring-2 ring-indigo-400 ring-opacity-50' : ''
       }`}
     >

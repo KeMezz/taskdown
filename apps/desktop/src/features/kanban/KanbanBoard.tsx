@@ -2,13 +2,15 @@ import { useState, useCallback, useMemo } from 'react';
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
+  pointerWithin,
+  rectIntersection,
   PointerSensor,
   useSensor,
   useSensors,
   type DragStartEvent,
   type DragEndEvent,
   type DragOverEvent,
+  type CollisionDetection,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { Task, TaskStatus } from '@taskdown/db';
@@ -27,6 +29,22 @@ interface KanbanBoardProps {
 }
 
 const STATUSES: TaskStatus[] = ['backlog', 'next', 'waiting', 'done'];
+
+/**
+ * 커스텀 충돌 감지 알고리즘
+ * pointerWithin 우선, 없으면 rectIntersection fallback
+ */
+const customCollisionDetection: CollisionDetection = (args) => {
+  // 포인터가 드롭 영역 안에 있는지 먼저 확인
+  const pointerCollisions = pointerWithin(args);
+
+  if (pointerCollisions.length > 0) {
+    return pointerCollisions;
+  }
+
+  // fallback: 사각형 교집합 기반 감지
+  return rectIntersection(args);
+};
 
 export function KanbanBoard({
   tasks,
@@ -147,7 +165,7 @@ export function KanbanBoard({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
