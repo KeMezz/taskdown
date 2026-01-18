@@ -2,7 +2,7 @@ export { runMigrations, getMigrationStatus } from './migrations';
 export type { MigrationResult } from './migrations';
 
 export {
-  selectVaultFolder,
+  getVaultPath,
   isValidVault,
   initializeVault,
   tryAutoLoadVault,
@@ -12,3 +12,6 @@ export {
   saveAppConfig,
 } from './vault';
 export type { TaskdownConfig, AppConfig, VaultInitResult } from './vault';
+
+export { QueryProvider, queryClient } from './queryClient';
+export { queryKeys } from './queryKeys';

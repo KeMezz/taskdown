@@ -86,34 +86,33 @@
 - [x] 버전 테이블로 마이그레이션 상태 관리
 
 ### 1.4 Vault 관리
-- [x] 폴더 선택 다이얼로그 연동
 - [x] .taskdown/ 폴더 구조 초기화 로직
 - [x] config.json 읽기/쓰기
-- [x] 앱 시작 시 Vault 경로 확인 및 로드
+- [x] 앱 시작 시 Vault 자동 초기화 (고정 경로: $APPDATA)
 
-**검증**: Vault 선택 → DB 생성 → 앱 재시작 → 데이터 유지 확인
+**검증**: 앱 시작 → $APPDATA/.taskdown/ 자동 생성 → 데이터 유지 확인
 
 ---
 
 ## Phase 2: 기본 UI 레이아웃
 
 ### 2.1 앱 셸 구조
-- [ ] 메인 레이아웃 컴포넌트 (Sidebar + Main)
-- [ ] Sidebar 컴포넌트 (Inbox, Projects, Settings)
-- [ ] Toolbar 컴포넌트 (검색, 새 태스크 버튼)
-- [ ] 반응형 레이아웃 (사이드바 접기)
+- [x] 메인 레이아웃 컴포넌트 (Sidebar + Main)
+- [x] Sidebar 컴포넌트 (Inbox, Projects, Settings)
+- [x] Toolbar 컴포넌트 (검색, 새 태스크 버튼)
+- [x] 반응형 레이아웃 (사이드바 접기)
 
 ### 2.2 상태 관리 셋업
-- [ ] appStore (vaultPath, isInitialized)
-- [ ] sidebarStore (selectedProjectId)
-- [ ] taskStore (selectedTaskId)
-- [ ] React Query provider 설정
+- [x] appStore (vaultPath, isInitialized)
+- [x] sidebarStore (selectedProjectId)
+- [x] taskStore (selectedTaskId)
+- [x] React Query provider 설정
 
 ### 2.3 라우팅 및 뷰 전환
-- [ ] Inbox 뷰 라우트
-- [ ] Project 뷰 라우트
-- [ ] Settings 뷰 라우트
-- [ ] 뷰 전환 애니메이션
+- [x] Inbox 뷰 라우트
+- [x] Project 뷰 라우트
+- [x] Settings 뷰 라우트
+- [x] 뷰 전환 애니메이션
 
 **검증**: 사이드바에서 Inbox/프로젝트/설정 전환 동작 확인
 
@@ -122,25 +121,25 @@
 ## Phase 3: 태스크/프로젝트 CRUD (task-management)
 
 ### 3.1 프로젝트 CRUD
-- [ ] useProjects 훅 (목록 조회)
-- [ ] useCreateProject 훅
-- [ ] useUpdateProject 훅
-- [ ] useDeleteProject 훅
-- [ ] 사이드바 프로젝트 목록 UI
-- [ ] 프로젝트 생성 다이얼로그
+- [x] useProjects 훅 (목록 조회)
+- [x] useCreateProject 훅
+- [x] useUpdateProject 훅
+- [x] useDeleteProject 훅
+- [x] 사이드바 프로젝트 목록 UI
+- [x] 프로젝트 생성 다이얼로그
 - [ ] 프로젝트 컨텍스트 메뉴 (이름 변경, 삭제)
 
 ### 3.2 태스크 CRUD
-- [ ] useTasks 훅 (프로젝트별/Inbox 조회)
-- [ ] useCreateTask 훅
-- [ ] useUpdateTask 훅
-- [ ] useDeleteTask 훅
-- [ ] 태스크 카드 컴포넌트
+- [x] useTasks 훅 (프로젝트별/Inbox 조회)
+- [x] useCreateTask 훅
+- [x] useUpdateTask 훅
+- [x] useDeleteTask 훅
+- [x] 태스크 카드 컴포넌트
 
 ### 3.3 빠른 태스크 생성
-- [ ] 인라인 태스크 생성 입력 필드
-- [ ] ⌘ + N 단축키 핸들링
-- [ ] 프로젝트 컨텍스트 인식
+- [x] 인라인 태스크 생성 입력 필드
+- [x] ⌘ + N 단축키 핸들링
+- [x] 프로젝트 컨텍스트 인식
 
 **검증**: 프로젝트 생성 → 태스크 추가 → 수정 → 삭제 전체 플로우
 
@@ -250,7 +249,7 @@
 - [ ] Esc: 패널/모달 닫기
 
 ### 8.2 설정 화면
-- [ ] Vault 경로 표시 및 변경
+- [ ] Vault 경로 표시 (읽기 전용)
 - [ ] 기본 알림 시간 설정
 - [ ] 테마 설정 (light/dark/system) - 선택적
 

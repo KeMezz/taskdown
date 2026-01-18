@@ -1,4 +1,6 @@
 import { useAppStore } from "../stores/appStore";
+import { useSidebarStore } from "../stores/sidebarStore";
+import { useTaskStore } from "../stores/taskStore";
 
 /**
  * Zustand 스토어 초기화 헬퍼
@@ -6,6 +8,8 @@ import { useAppStore } from "../stores/appStore";
  */
 export function resetAllStores(): void {
   useAppStore.getState().reset();
+  useSidebarStore.getState().reset();
+  useTaskStore.getState().reset();
 }
 
 /**
@@ -15,4 +19,22 @@ export function setAppStoreState(
   state: Partial<ReturnType<typeof useAppStore.getState>>
 ): void {
   useAppStore.setState(state);
+}
+
+/**
+ * 사이드바 스토어 상태 설정 헬퍼
+ */
+export function setSidebarStoreState(
+  state: Partial<ReturnType<typeof useSidebarStore.getState>>
+): void {
+  useSidebarStore.setState(state);
+}
+
+/**
+ * 태스크 스토어 상태 설정 헬퍼
+ */
+export function setTaskStoreState(
+  state: Partial<ReturnType<typeof useTaskStore.getState>>
+): void {
+  useTaskStore.setState(state);
 }
