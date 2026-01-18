@@ -119,15 +119,35 @@ async fn save_asset(
     bytes: Vec<u8>,
     vault_path: String,
 ) -> Result<String, String> {
+    // Path Traversal 방지: filename에서 파일명만 추출
+    let safe_filename = std::path::Path::new(&filename)
+        .file_name()
+        .ok_or_else(|| "Invalid filename: path traversal detected".to_string())?
+        .to_str()
+        .ok_or_else(|| "Invalid filename: non-UTF8 characters".to_string())?;
+
     let assets_dir = std::path::Path::new(&vault_path)
         .join(".taskdown")
         .join("assets");
     std::fs::create_dir_all(&assets_dir).map_err(|e| e.to_string())?;
 
-    let file_path = assets_dir.join(&filename);
+    let file_path = assets_dir.join(safe_filename);
+
+    // 최종 경로가 assets_dir 내부인지 검증 (심볼릭 링크 우회 방지)
+    let canonical_assets = assets_dir.canonicalize().map_err(|e| e.to_string())?;
+    let canonical_file = file_path.parent()
+        .ok_or_else(|| "Invalid file path".to_string())?
+        .canonicalize()
+        .map_err(|e| e.to_string())?
+        .join(safe_filename);
+
+    if !canonical_file.starts_with(&canonical_assets) {
+        return Err("Path traversal attack detected".to_string());
+    }
+
     std::fs::write(&file_path, bytes).map_err(|e| e.to_string())?;
 
-    Ok(format!("asset://localhost/{}", filename))
+    Ok(format!("asset://localhost/{}", safe_filename))
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
