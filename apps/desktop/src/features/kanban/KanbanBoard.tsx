@@ -141,9 +141,8 @@ export function KanbanBoard({
 
       // 상태가 변경된 경우
       if (sourceStatus !== targetStatus) {
-        // 새 sortOrder 계산
+        // 새 sortOrder 계산 (onTaskReorder가 status와 sortOrder를 함께 업데이트)
         const newSortOrder = calculateSortOrder(targetTasks, targetIndex);
-        onTaskStatusChange(activeId, targetStatus);
         onTaskReorder(activeId, targetStatus, newSortOrder);
         return;
       }
@@ -159,7 +158,7 @@ export function KanbanBoard({
         onTaskReorder(activeId, sourceStatus, newSortOrder);
       }
     },
-    [tasks, tasksByStatus, onTaskStatusChange, onTaskReorder]
+    [tasks, tasksByStatus, onTaskReorder]
   );
 
   return (
