@@ -54,6 +54,16 @@
 
 **검증**: `pnpm dev`로 앱 실행, Tauri 윈도우 열림 확인
 
+### 0.8 테스트 인프라 구축
+- [x] Vitest 워크스페이스 설정 (vitest.workspace.ts)
+- [x] 루트 테스트 스크립트 추가 (test, test:run, test:coverage)
+- [x] @taskdown/db: better-sqlite3 in-memory DB 헬퍼
+- [x] @taskdown/ui: jsdom 환경 설정
+- [x] @taskdown/desktop: Tauri API 모킹, Zustand 테스트 헬퍼
+- [x] CI/CD 워크플로우 (.github/workflows/test.yml)
+
+**검증**: `pnpm test:run` 통과, CI 파이프라인 동작 확인
+
 ---
 
 ## Phase 1: 데이터 레이어 (vault-storage)

@@ -8,10 +8,15 @@
     "build:all": "pnpm -r build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "clean": "pnpm -r clean"
+    "clean": "pnpm -r clean",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
-    "prettier": "^3.4.2"
+    "@vitest/coverage-v8": "^4.0.17",
+    "prettier": "^3.4.2",
+    "vitest": "^4.0.17"
   },
   "packageManager": "pnpm@9.15.4",
   "engines": {
