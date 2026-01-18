@@ -55,6 +55,7 @@ export function KanbanColumn({
 
   return (
     <div
+      ref={setNodeRef}
       className={`flex flex-col min-w-[260px] max-w-[300px] flex-1 rounded-lg ${config.bgColor} ${
         isOver ? 'ring-2 ring-indigo-400 ring-opacity-50' : ''
       }`}
@@ -70,10 +71,7 @@ export function KanbanColumn({
       </div>
 
       {/* Column Content */}
-      <div
-        ref={setNodeRef}
-        className="flex-1 p-2 space-y-2 overflow-y-auto min-h-[200px]"
-      >
+      <div className="flex-1 p-2 space-y-2 overflow-y-auto">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[100px] text-gray-400 text-sm">
