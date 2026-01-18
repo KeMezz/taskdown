@@ -21,7 +21,7 @@ export function ProjectView({
 }: ProjectViewProps) {
   return (
     <div className="flex-1 flex flex-col">
-      <Toolbar title={project.name} onNewTask={() => {}} />
+      <Toolbar title={project.name} />
 
       <div className="flex-1 overflow-y-auto p-4">
         {/* 프로젝트 헤더 */}

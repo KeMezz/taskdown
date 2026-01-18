@@ -1,6 +1,6 @@
 interface ToolbarProps {
   title: string;
-  onNewTask: () => void;
+  onNewTask?: () => void;
   onSearch?: (query: string) => void;
   searchPlaceholder?: string;
 }
@@ -32,16 +32,18 @@ export function Toolbar({ title, onNewTask, onSearch, searchPlaceholder = '검�
         )}
 
         {/* 새 태스크 버튼 */}
-        <button
-          onClick={onNewTask}
-          className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>새 태스크</span>
-          <kbd className="hidden sm:inline-flex ml-1 px-1.5 py-0.5 text-xs bg-indigo-500 rounded">⌘N</kbd>
-        </button>
+        {onNewTask && (
+          <button
+            onClick={onNewTask}
+            className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>새 태스크</span>
+            <kbd className="hidden sm:inline-flex ml-1 px-1.5 py-0.5 text-xs bg-indigo-500 rounded">⌘N</kbd>
+          </button>
+        )}
       </div>
     </header>
   );

@@ -18,97 +18,57 @@
     {
       "identifier": "fs:scope",
       "allow": [
-        "$APPDATA/**",
-        "$HOME/**",
-        "$HOME/**/.taskdown",
-        "$HOME/**/.taskdown/**",
-        "/Users/**",
-        "/Users/**/.taskdown",
-        "/Users/**/.taskdown/**"
+        "$APPDATA/taskdown/**",
+        "$HOME/.taskdown/**"
       ]
     },
     {
       "identifier": "fs:allow-exists",
       "allow": [
-        "$APPDATA/**",
-        "$HOME/**",
-        "$HOME/**/.taskdown",
-        "$HOME/**/.taskdown/**",
-        "/Users/**",
-        "/Users/**/.taskdown",
-        "/Users/**/.taskdown/**"
+        "$APPDATA/taskdown/**",
+        "$HOME/.taskdown/**"
       ]
     },
     {
       "identifier": "fs:allow-mkdir",
       "allow": [
-        "$APPDATA/**",
-        "$HOME/**",
-        "$HOME/**/.taskdown",
-        "$HOME/**/.taskdown/**",
-        "/Users/**",
-        "/Users/**/.taskdown",
-        "/Users/**/.taskdown/**"
+        "$APPDATA/taskdown/**",
+        "$HOME/.taskdown/**"
       ]
     },
     {
       "identifier": "fs:allow-read-text-file",
       "allow": [
-        "$APPDATA/**",
-        "$HOME/**",
-        "$HOME/**/.taskdown",
-        "$HOME/**/.taskdown/**",
-        "/Users/**",
-        "/Users/**/.taskdown",
-        "/Users/**/.taskdown/**"
+        "$APPDATA/taskdown/**",
+        "$HOME/.taskdown/**"
       ]
     },
     {
       "identifier": "fs:allow-write-text-file",
       "allow": [
-        "$APPDATA/**",
-        "$HOME/**",
-        "$HOME/**/.taskdown",
-        "$HOME/**/.taskdown/**",
-        "/Users/**",
-        "/Users/**/.taskdown",
-        "/Users/**/.taskdown/**"
+        "$APPDATA/taskdown/**",
+        "$HOME/.taskdown/**"
       ]
     },
     {
       "identifier": "fs:allow-read-file",
       "allow": [
-        "$APPDATA/**",
-        "$HOME/**",
-        "$HOME/**/.taskdown",
-        "$HOME/**/.taskdown/**",
-        "/Users/**",
-        "/Users/**/.taskdown",
-        "/Users/**/.taskdown/**"
+        "$APPDATA/taskdown/**",
+        "$HOME/.taskdown/**"
       ]
     },
     {
       "identifier": "fs:allow-write-file",
       "allow": [
-        "$APPDATA/**",
-        "$HOME/**",
-        "$HOME/**/.taskdown",
-        "$HOME/**/.taskdown/**",
-        "/Users/**",
-        "/Users/**/.taskdown",
-        "/Users/**/.taskdown/**"
+        "$APPDATA/taskdown/**",
+        "$HOME/.taskdown/**"
       ]
     },
     {
       "identifier": "fs:allow-read-dir",
       "allow": [
-        "$APPDATA/**",
-        "$HOME/**",
-        "$HOME/**/.taskdown",
-        "$HOME/**/.taskdown/**",
-        "/Users/**",
-        "/Users/**/.taskdown",
-        "/Users/**/.taskdown/**"
+        "$APPDATA/taskdown/**",
+        "$HOME/.taskdown/**"
       ]
     },
     "notification:default",

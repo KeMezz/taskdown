@@ -19,7 +19,7 @@ export function InboxView({
 }: InboxViewProps) {
   return (
     <div className="flex-1 flex flex-col">
-      <Toolbar title="Inbox" onNewTask={() => {}} />
+      <Toolbar title="Inbox" />
 
       <div className="flex-1 overflow-y-auto p-4">
         {/* 빠른 태스크 입력 */}
