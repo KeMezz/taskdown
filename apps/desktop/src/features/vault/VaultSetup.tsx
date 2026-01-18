@@ -43,7 +43,18 @@ export function VaultSetup() {
 
       setInitialized(true);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';
+      let errorMessage = '알 수 없는 오류가 발생했습니다.';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      } else {
+        try {
+          errorMessage = JSON.stringify(err);
+        } catch {
+          errorMessage = '알 수 없는 오류가 발생했습니다.';
+        }
+      }
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -71,9 +82,7 @@ export function VaultSetup() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Taskdown</h1>
-          <p className="text-gray-600">
-            GTD 기반 할 일 관리와 마크다운 노트를 결합한 로컬 우선 앱
-          </p>
+          <p className="text-gray-600">GTD 기반 할 일 관리와 마크다운 노트를 결합한 로컬 우선 앱</p>
         </div>
 
         <div className="space-y-4">

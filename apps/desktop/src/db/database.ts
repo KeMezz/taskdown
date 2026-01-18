@@ -20,11 +20,11 @@ export const db = drizzle(
       }
 
       if (method === 'get') {
-        const rows = result === null ? null : result;
+        const rows = result === null ? [] : [result];
         return { rows: rows as unknown[] };
       }
 
-      return { rows: (result ?? []) as unknown[] };
+      return { rows: Array.isArray(result) ? result : [] };
     } catch (error) {
       console.error('Database error:', error);
       throw error;

@@ -47,17 +47,36 @@ async function getCurrentVersion(): Promise<number> {
  * 단일 마이그레이션 실행
  */
 async function applyMigration(migration: MigrationDefinition): Promise<void> {
-  // SQL 문을 세미콜론으로 분리하여 개별 실행
-  const statements = migration.sql
+  const cleanedSql = migration.sql
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('--'))
+    .join('\n');
+
+  const statements = cleanedSql
     .split(';')
     .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !s.startsWith('--'));
+    .filter((s) => s.length > 0);
 
   for (const statement of statements) {
-    await executeRawSql(statement);
+    try {
+      await executeRawSql(statement);
+    } catch (error) {
+      let details = 'Unknown error';
+      if (error instanceof Error) {
+        details = error.message;
+      } else if (typeof error === 'string') {
+        details = error;
+      } else {
+        try {
+          details = JSON.stringify(error);
+        } catch {
+          details = 'Unknown error';
+        }
+      }
+      throw new Error(`Migration ${migration.version} failed: ${details}\nSQL: ${statement}`);
+    }
   }
 
-  // 마이그레이션 적용 기록
   await db.insert(migrations).values({
     version: migration.version,
     name: migration.name,

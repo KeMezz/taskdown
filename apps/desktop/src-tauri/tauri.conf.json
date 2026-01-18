@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Taskdown",
         "width": 1200,
         "height": 800,
@@ -45,8 +46,6 @@
     "sql": {
       "preload": []
     },
-    "notification": {
-      "all": true
-    }
+    "notification": null
   }
 }

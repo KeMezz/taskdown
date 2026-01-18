@@ -1,13 +1,31 @@
 import { useEffect, useState } from 'react';
-import { useAppStore } from './stores';
-import { tryAutoLoadVault } from './lib';
+import { useAppStore, useSidebarStore } from './stores';
+import { tryAutoLoadVault, QueryProvider } from './lib';
 import { VaultSetup } from './features/vault';
+import { MainLayout } from './features/layout';
+import { InboxView } from './views/InboxView';
+import { ProjectView } from './views/ProjectView';
+import { SettingsView } from './views/SettingsView';
 
 function AppContent() {
-  const { isReadOnly, migrationError, vaultPath } = useAppStore();
+  const { isReadOnly, migrationError } = useAppStore();
+  const { currentView, selectedProjectId } = useSidebarStore();
+
+  const renderView = () => {
+    switch (currentView) {
+      case 'inbox':
+        return <InboxView />;
+      case 'project':
+        return <ProjectView projectId={selectedProjectId} />;
+      case 'settings':
+        return <SettingsView />;
+      default:
+        return <InboxView />;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <MainLayout>
       {isReadOnly && (
         <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2">
           <p className="text-sm text-yellow-800">
@@ -15,14 +33,8 @@ function AppContent() {
           </p>
         </div>
       )}
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Taskdown</h1>
-          <p className="text-gray-600 mb-2">GTD 기반 할 일 관리 앱</p>
-          <p className="text-sm text-gray-500">Vault: {vaultPath}</p>
-        </div>
-      </div>
-    </div>
+      {renderView()}
+    </MainLayout>
   );
 }
 
@@ -36,7 +48,6 @@ function App() {
       try {
         setInitializing(true);
 
-        // 이전에 사용한 Vault 자동 로드 시도
         const result = await tryAutoLoadVault();
 
         if (result?.success && result.vaultPath) {
@@ -88,7 +99,11 @@ function App() {
     return <VaultSetup />;
   }
 
-  return <AppContent />;
+  return (
+    <QueryProvider>
+      <AppContent />
+    </QueryProvider>
+  );
 }
 
 export default App;

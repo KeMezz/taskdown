@@ -1,0 +1,60 @@
+import { useTasks } from '../features/tasks';
+import { useProject } from '../features/projects';
+import { TaskCard } from '../features/tasks/TaskCard';
+import { QuickTaskInput } from '../features/tasks/QuickTaskInput';
+import { useTaskStore } from '../stores';
+
+interface ProjectViewProps {
+  projectId: string | null;
+}
+
+export function ProjectView({ projectId }: ProjectViewProps) {
+  const { data: project } = useProject(projectId);
+  const { data: tasks, isLoading } = useTasks(projectId);
+  const isQuickInputActive = useTaskStore((s) => s.isQuickInputActive);
+
+  if (!projectId) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-gray-400">프로젝트를 선택하세요</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="animate-spin h-6 w-6 border-2 border-indigo-600 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 overflow-auto p-6">
+      <div className="mb-6 flex items-center gap-3">
+        {project?.color && (
+          <span
+            className="w-3 h-3 rounded-full ring-1 ring-inset ring-black/5"
+            style={{ backgroundColor: project.color }}
+          />
+        )}
+        <h1 className="text-2xl font-bold text-gray-900">{project?.name || '프로젝트'}</h1>
+      </div>
+
+      {isQuickInputActive && <QuickTaskInput projectId={projectId} />}
+
+      <div className="space-y-2">
+        {tasks?.map((task) => (
+          <TaskCard key={task.id} task={task} />
+        ))}
+
+        {(!tasks || tasks.length === 0) && !isQuickInputActive && (
+          <div className="text-center py-12">
+            <p className="text-gray-400">태스크가 없습니다</p>
+            <p className="text-sm text-gray-400 mt-1">⌘N을 눌러 새 태스크를 추가하세요</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

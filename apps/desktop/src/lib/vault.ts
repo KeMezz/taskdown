@@ -57,6 +57,8 @@ async function getAppConfigPath(): Promise<string> {
  * 앱 설정 저장 (마지막 Vault 경로 등)
  */
 export async function saveAppConfig(config: AppConfig): Promise<void> {
+  const appData = await appDataDir();
+  await mkdir(appData, { recursive: true });
   const configPath = await getAppConfigPath();
   await writeTextFile(configPath, JSON.stringify(config, null, 2));
 }
@@ -83,16 +85,33 @@ export async function loadAppConfig(): Promise<AppConfig | null> {
  * Vault 폴더 선택 다이얼로그 열기
  */
 export async function selectVaultFolder(): Promise<string | null> {
-  const selected = await open({
-    directory: true,
-    multiple: false,
-    title: 'Taskdown Vault 폴더 선택',
-  });
+  try {
+    const selected = await open({
+      directory: true,
+      multiple: false,
+      title: 'Taskdown Vault 폴더 선택',
+    });
 
-  if (selected && typeof selected === 'string') {
-    return selected;
+    if (selected && typeof selected === 'string') {
+      return selected;
+    }
+    return null;
+  } catch (error) {
+    let details = 'Unknown error';
+    if (error instanceof Error) {
+      details = error.message;
+    } else if (typeof error === 'string') {
+      details = error;
+    } else {
+      try {
+        details = JSON.stringify(error);
+      } catch {
+        details = 'Unknown error';
+      }
+    }
+    console.error('Failed to open vault dialog:', error);
+    throw new Error(`Failed to open vault dialog: ${details}`);
   }
-  return null;
 }
 
 /**
@@ -152,10 +171,7 @@ export async function loadVaultConfig(vaultPath: string): Promise<TaskdownConfig
 /**
  * Vault 설정 저장하기
  */
-export async function saveVaultConfig(
-  vaultPath: string,
-  config: TaskdownConfig
-): Promise<void> {
+export async function saveVaultConfig(vaultPath: string, config: TaskdownConfig): Promise<void> {
   const configPath = await join(vaultPath, TASKDOWN_DIR, CONFIG_FILE);
   await writeTextFile(configPath, JSON.stringify(config, null, 2));
 }
@@ -195,7 +211,18 @@ export async function initializeVault(vaultPath: string): Promise<VaultInitResul
       isReadOnly: false,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    let errorMessage = 'Unknown error';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else {
+      try {
+        errorMessage = JSON.stringify(error);
+      } catch {
+        errorMessage = 'Unknown error';
+      }
+    }
     console.error('Failed to initialize vault:', errorMessage);
     return {
       success: false,

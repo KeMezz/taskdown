@@ -53,11 +53,11 @@ async fn run_sql(
         "get" => {
             use rusqlite::types::ValueRef;
             let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
-            let columns: Vec<String> = stmt.column_names().iter().map(|s| s.to_string()).collect();
+            let column_count = stmt.column_count();
             let row = stmt
                 .query_row(params_refs.as_slice(), |row| {
-                    let mut obj = serde_json::Map::new();
-                    for (i, col) in columns.iter().enumerate() {
+                    let mut values = Vec::with_capacity(column_count);
+                    for i in 0..column_count {
                         let value = match row.get_ref(i)? {
                             ValueRef::Null => Value::Null,
                             ValueRef::Integer(n) => Value::Number(n.into()),
@@ -67,9 +67,9 @@ async fn run_sql(
                             }
                             ValueRef::Blob(_) => Value::Null,
                         };
-                        obj.insert(col.clone(), value);
+                        values.push(value);
                     }
-                    Ok(Value::Object(obj))
+                    Ok(Value::Array(values))
                 })
                 .map_err(|e| e.to_string())?;
             Ok(row)
@@ -78,11 +78,11 @@ async fn run_sql(
         "all" => {
             use rusqlite::types::ValueRef;
             let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
-            let columns: Vec<String> = stmt.column_names().iter().map(|s| s.to_string()).collect();
+            let column_count = stmt.column_count();
             let rows = stmt
                 .query_map(params_refs.as_slice(), |row| {
-                    let mut obj = serde_json::Map::new();
-                    for (i, col) in columns.iter().enumerate() {
+                    let mut values = Vec::with_capacity(column_count);
+                    for i in 0..column_count {
                         let value = match row.get_ref(i)? {
                             ValueRef::Null => Value::Null,
                             ValueRef::Integer(n) => Value::Number(n.into()),
@@ -92,9 +92,9 @@ async fn run_sql(
                             }
                             ValueRef::Blob(_) => Value::Null,
                         };
-                        obj.insert(col.clone(), value);
+                        values.push(value);
                     }
-                    Ok(Value::Object(obj))
+                    Ok(Value::Array(values))
                 })
                 .map_err(|e| e.to_string())?
                 .filter_map(|r| r.ok())
