@@ -1,5 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Task, Project, TaskStatus } from '@taskdown/db';
+import type { JSONContent } from '@tiptap/core';
+import {
+  useTaskEditor,
+  useImageDrop,
+  useImagePaste,
+  useAutoSave,
+  getSaveStatusText,
+  getSaveStatusColor,
+} from '../editor';
+import { EditorContent } from '@tiptap/react';
 
 interface TaskDetailPanelProps {
   task: Task;
@@ -11,6 +21,7 @@ interface TaskDetailPanelProps {
     projectId?: string | null;
     dueDate?: Date | null;
     status?: TaskStatus;
+    content?: string;
   }) => void;
   onDelete: () => void;
 }
@@ -34,23 +45,63 @@ export function TaskDetailPanel({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
+
+  // 자동 저장 핸들러
+  const handleSaveContent = useCallback(
+    async (content: JSONContent) => {
+      onUpdate({ content: JSON.stringify(content) });
+    },
+    [onUpdate]
+  );
+
+  const { status: saveStatus, debouncedSave } = useAutoSave({
+    onSave: handleSaveContent,
+    debounceMs: 500,
+  });
+
+  // 에디터 콘텐츠 업데이트 핸들러
+  const handleEditorUpdate = useCallback(
+    (content: JSONContent) => {
+      debouncedSave(content);
+    },
+    [debouncedSave]
+  );
+
+  // TipTap 에디터
+  const editor = useTaskEditor({
+    content: task.content ?? '{}',
+    onUpdate: handleEditorUpdate,
+    editable: true,
+  });
+
+  // 이미지 드래그앤드롭
+  const { handleDrop, handleDragOver } = useImageDrop(editor);
+
+  // 이미지 클립보드 붙여넣기
+  const { handlePaste } = useImagePaste(editor);
 
   // task가 변경되면 title 업데이트
   useEffect(() => {
     setTitle(task.title);
   }, [task.title]);
 
-  // ESC 키로 닫기
+  // ESC 키로 닫기 (에디터가 포커스되지 않은 경우에만)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
+        // 에디터가 포커스된 상태면 먼저 에디터 포커스 해제
+        if (editor?.isFocused) {
+          editor.commands.blur();
+          return;
+        }
         onClose();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, editor]);
 
   // 바깥 클릭으로 닫기
   useEffect(() => {
@@ -142,11 +193,18 @@ export function TaskDetailPanel({
       {/* Panel */}
       <div
         ref={panelRef}
-        className="relative w-full max-w-md bg-white shadow-xl animate-slide-in-right h-full overflow-hidden flex flex-col"
+        className="relative w-full max-w-lg bg-white shadow-xl animate-slide-in-right h-full overflow-hidden flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-          <h2 className="text-sm font-medium text-gray-500">태스크 상세</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-medium text-gray-500">태스크 상세</h2>
+            {saveStatus !== 'idle' && (
+              <span className={`text-xs ${getSaveStatusColor(saveStatus)}`}>
+                {getSaveStatusText(saveStatus)}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={onDelete}
@@ -262,11 +320,21 @@ export function TaskDetailPanel({
             </div>
           </div>
 
-          {/* Content Placeholder */}
+          {/* Editor */}
           <div className="border-t border-gray-200 pt-4">
             <label className="block text-sm text-gray-500 mb-2">메모</label>
-            <div className="min-h-[200px] p-3 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-400">
-              Phase 6에서 TipTap 에디터 구현 예정
+            <div
+              ref={editorContainerRef}
+              className="task-editor min-h-[200px] bg-white border border-gray-200 rounded-md focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onPaste={handlePaste}
+            >
+              {editor ? (
+                <EditorContent editor={editor} />
+              ) : (
+                <div className="min-h-[200px] p-3 animate-pulse bg-gray-50" />
+              )}
             </div>
           </div>
         </div>

@@ -1,1 +1,108 @@
 @import 'tailwindcss';
+
+/* TipTap Editor Styles */
+.task-editor .tiptap {
+  @apply p-3 min-h-[200px] focus:outline-none;
+}
+
+.task-editor .tiptap p {
+  @apply mb-2;
+}
+
+.task-editor .tiptap h1 {
+  @apply text-2xl font-bold mb-3;
+}
+
+.task-editor .tiptap h2 {
+  @apply text-xl font-semibold mb-2;
+}
+
+.task-editor .tiptap h3 {
+  @apply text-lg font-medium mb-2;
+}
+
+.task-editor .tiptap ul,
+.task-editor .tiptap ol {
+  @apply pl-6 mb-2;
+}
+
+.task-editor .tiptap ul {
+  @apply list-disc;
+}
+
+.task-editor .tiptap ol {
+  @apply list-decimal;
+}
+
+.task-editor .tiptap li {
+  @apply mb-1;
+}
+
+.task-editor .tiptap blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 my-2;
+}
+
+.task-editor .tiptap code {
+  @apply bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.task-editor .tiptap pre {
+  @apply rounded-md bg-gray-900 text-gray-100 p-4 text-sm overflow-x-auto my-2;
+}
+
+.task-editor .tiptap pre code {
+  @apply bg-transparent text-inherit p-0;
+}
+
+.task-editor .tiptap a {
+  @apply text-indigo-600 underline hover:text-indigo-800;
+}
+
+.task-editor .tiptap hr {
+  @apply my-4 border-gray-200;
+}
+
+/* Task List (체크리스트) 스타일 */
+.task-editor .tiptap ul[data-type="taskList"] {
+  @apply list-none pl-0;
+}
+
+.task-editor .tiptap ul[data-type="taskList"] li {
+  @apply flex items-start gap-2;
+}
+
+.task-editor .tiptap ul[data-type="taskList"] li > label {
+  @apply flex items-center;
+}
+
+.task-editor .tiptap ul[data-type="taskList"] li > label > input[type="checkbox"] {
+  @apply w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer mt-1;
+}
+
+.task-editor .tiptap ul[data-type="taskList"] li > div {
+  @apply flex-1;
+}
+
+.task-editor .tiptap ul[data-type="taskList"] li[data-checked="true"] > div {
+  @apply line-through text-gray-400;
+}
+
+/* 이미지 스타일 */
+.task-editor .tiptap img.task-image {
+  @apply max-w-full h-auto rounded-md my-2;
+}
+
+.task-editor .tiptap img.task-image.ProseMirror-selectednode {
+  @apply ring-2 ring-indigo-500;
+}
+
+/* 코드 블록 언어 레이블 */
+.task-editor .tiptap pre code.hljs {
+  @apply block;
+}
+
+/* 에디터 플레이스홀더 */
+.task-editor .tiptap p.is-editor-empty:first-child::before {
+  @apply text-gray-400 float-left h-0 pointer-events-none;
+  content: attr(data-placeholder);
+}
