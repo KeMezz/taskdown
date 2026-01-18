@@ -74,14 +74,7 @@ export function useCreateTask() {
 
       await db.insert(tasks).values(newTask);
 
-      return {
-        ...newTask,
-        sortOrder: newTask.sortOrder ?? 0,
-        content: newTask.content ?? '{}',
-        status: (newTask.status as TaskStatus) ?? 'backlog',
-        projectId: newTask.projectId ?? null,
-        dueDate: newTask.dueDate ?? null,
-      };
+      return newTask as Task;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks(variables.projectId ?? null) });

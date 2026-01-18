@@ -86,7 +86,9 @@ function AppContent() {
 
       if (cmdOrCtrl && e.shiftKey && e.key === 'N') {
         e.preventDefault();
-        handleNewProject();
+        if (!isReadOnly) {
+          setIsProjectDialogOpen(true);
+        }
       }
 
       if (cmdOrCtrl && e.key === ',') {
