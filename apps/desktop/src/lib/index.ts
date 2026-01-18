@@ -2,7 +2,7 @@ export { runMigrations, getMigrationStatus } from './migrations';
 export type { MigrationResult } from './migrations';
 
 export {
-  selectVaultFolder,
+  getVaultPath,
   isValidVault,
   initializeVault,
   tryAutoLoadVault,

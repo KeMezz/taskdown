@@ -1,32 +1,26 @@
 /**
  * Vault 설정 화면
- * 앱 최초 실행 시 또는 Vault가 없을 때 표시
+ * 앱 최초 실행 시 자동 초기화 진행
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppStore } from '../../stores';
-import { selectVaultFolder, initializeVault } from '../../lib';
+import { getVaultPath, initializeVault } from '../../lib';
 
 export function VaultSetup() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const { setVaultPath, setInitialized, setInitializing, setReadOnlyMode } = useAppStore();
 
-  const handleSelectFolder = async () => {
+  const initVault = async () => {
     try {
       setIsLoading(true);
       setInitializing(true);
       setError(null);
 
-      const selectedPath = await selectVaultFolder();
-      if (!selectedPath) {
-        setIsLoading(false);
-        setInitializing(false);
-        return;
-      }
-
-      const result = await initializeVault(selectedPath);
+      const vaultPath = await getVaultPath();
+      const result = await initializeVault(vaultPath);
 
       if (!result.success) {
         setError(result.error || '알 수 없는 오류가 발생했습니다.');
@@ -49,6 +43,14 @@ export function VaultSetup() {
       setIsLoading(false);
       setInitializing(false);
     }
+  };
+
+  useEffect(() => {
+    initVault();
+  }, []);
+
+  const handleRetry = () => {
+    initVault();
   };
 
   return (
@@ -77,28 +79,10 @@ export function VaultSetup() {
         </div>
 
         <div className="space-y-4">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h2 className="font-medium text-gray-900 mb-2">Vault 폴더를 선택하세요</h2>
-            <p className="text-sm text-gray-600">
-              모든 데이터는 선택한 폴더 안에 저장됩니다. 클라우드 드라이브 폴더를 선택하면 자동으로
-              백업됩니다.
-            </p>
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
-          <button
-            onClick={handleSelectFolder}
-            disabled={isLoading}
-            className="w-full py-3 px-4 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+          {isLoading ? (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-center gap-3">
+                <svg className="animate-spin h-5 w-5 text-indigo-600" viewBox="0 0 24 24">
                   <circle
                     className="opacity-25"
                     cx="12"
@@ -113,18 +97,31 @@ export function VaultSetup() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                초기화 중...
-              </span>
-            ) : (
-              '폴더 선택'
-            )}
-          </button>
+                <span className="text-gray-700">초기화 중...</span>
+              </div>
+              <p className="text-sm text-gray-500 text-center mt-2">
+                앱 데이터 폴더에 Vault를 설정하고 있습니다.
+              </p>
+            </div>
+          ) : error ? (
+            <>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+
+              <button
+                onClick={handleRetry}
+                className="w-full py-3 px-4 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
+              >
+                다시 시도
+              </button>
+            </>
+          ) : null}
         </div>
 
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
-            Vault 폴더 안에 <code className="bg-gray-100 px-1 rounded">.taskdown</code> 폴더가
-            생성됩니다.
+            데이터는 앱 데이터 폴더에 자동으로 저장됩니다.
           </p>
         </div>
       </div>

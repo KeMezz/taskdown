@@ -1,10 +1,6 @@
 import { useAppStore } from '../stores';
 
-interface SettingsViewProps {
-  onChangeVault?: () => void;
-}
-
-export function SettingsView({ onChangeVault }: SettingsViewProps) {
+export function SettingsView() {
   const { vaultPath } = useAppStore();
 
   return (
@@ -21,19 +17,12 @@ export function SettingsView({ onChangeVault }: SettingsViewProps) {
               Vault 설정
             </h3>
             <div className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Vault 경로</p>
-                  <p className="text-sm text-gray-500 mt-1 break-all">{vaultPath || '설정되지 않음'}</p>
-                </div>
-                {onChangeVault && (
-                  <button
-                    onClick={onChangeVault}
-                    className="px-3 py-1.5 text-sm text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors"
-                  >
-                    변경
-                  </button>
-                )}
+              <div>
+                <p className="text-sm font-medium text-gray-700">Vault 경로</p>
+                <p className="text-sm text-gray-500 mt-1 break-all">{vaultPath || '설정되지 않음'}</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  앱 데이터 폴더에 자동으로 저장됩니다.
+                </p>
               </div>
             </div>
           </section>

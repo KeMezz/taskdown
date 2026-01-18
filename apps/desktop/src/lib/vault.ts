@@ -1,9 +1,8 @@
 /**
  * Vault 관리 모듈
- * Vault 폴더 선택, 초기화, 설정 관리
+ * Vault 초기화, 설정 관리 (고정 경로: $APPDATA/)
  */
 
-import { open } from '@tauri-apps/plugin-dialog';
 import { exists, mkdir, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { join, appDataDir } from '@tauri-apps/api/path';
 import { initDatabase } from '../db';
@@ -54,6 +53,14 @@ async function getAppConfigPath(): Promise<string> {
 }
 
 /**
+ * 고정된 Vault 경로 반환
+ * $APPDATA 자체가 taskdown 앱 폴더 (com.taskdown.app)
+ */
+export async function getVaultPath(): Promise<string> {
+  return await appDataDir();
+}
+
+/**
  * 앱 설정 저장 (마지막 Vault 경로 등)
  */
 export async function saveAppConfig(config: AppConfig): Promise<void> {
@@ -77,22 +84,6 @@ export async function loadAppConfig(): Promise<AppConfig | null> {
     console.error('Failed to load app config:', error);
     return null;
   }
-}
-
-/**
- * Vault 폴더 선택 다이얼로그 열기
- */
-export async function selectVaultFolder(): Promise<string | null> {
-  const selected = await open({
-    directory: true,
-    multiple: false,
-    title: 'Taskdown Vault 폴더 선택',
-  });
-
-  if (selected && typeof selected === 'string') {
-    return selected;
-  }
-  return null;
 }
 
 /**
@@ -195,8 +186,19 @@ export async function initializeVault(vaultPath: string): Promise<VaultInitResul
       isReadOnly: false,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Failed to initialize vault:', errorMessage);
+    // Tauri 에러는 종종 Error 인스턴스가 아닌 객체로 전달됨
+    let errorMessage: string;
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error && typeof error === 'object') {
+      errorMessage = JSON.stringify(error);
+    } else {
+      errorMessage = 'Unknown error';
+    }
+    console.error('Failed to initialize vault:', error);
+    console.error('Error details:', errorMessage);
     return {
       success: false,
       error: errorMessage,
@@ -206,18 +208,9 @@ export async function initializeVault(vaultPath: string): Promise<VaultInitResul
 
 /**
  * 앱 시작 시 Vault 자동 로드 시도
+ * 고정 경로에서 자동 초기화
  */
-export async function tryAutoLoadVault(): Promise<VaultInitResult | null> {
-  const appConfig = await loadAppConfig();
-
-  if (!appConfig?.lastVaultPath) {
-    return null;
-  }
-
-  const isValid = await isValidVault(appConfig.lastVaultPath);
-  if (!isValid) {
-    return null;
-  }
-
-  return await initializeVault(appConfig.lastVaultPath);
+export async function tryAutoLoadVault(): Promise<VaultInitResult> {
+  const vaultPath = await getVaultPath();
+  return await initializeVault(vaultPath);
 }

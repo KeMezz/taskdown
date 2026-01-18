@@ -4,32 +4,31 @@
 
 ## ADDED Requirements
 
-### Requirement: Vault 폴더 선택
+### Requirement: Vault 자동 초기화
 
-The system SHALL allow users to select a folder as their Vault for data storage.
+The system SHALL automatically initialize the Vault in the app data folder.
 
-#### Scenario: 최초 실행 시 Vault 선택
+#### Scenario: 최초 실행 시 자동 초기화
 
 - **GIVEN** 사용자가 앱을 처음 실행함
-- **WHEN** Vault 경로가 설정되지 않음
-- **THEN** 폴더 선택 다이얼로그가 표시됨
-- **AND** 사용자가 폴더를 선택하면 해당 경로가 저장됨
+- **WHEN** 앱이 시작됨
+- **THEN** `$APPDATA/` 폴더에서 자동으로 Vault가 초기화됨
+- **AND** `.taskdown/` 구조가 생성됨
 
-#### Scenario: Vault 경로 변경
+#### Scenario: 앱 재시작 시 자동 로드
 
-- **GIVEN** 사용자가 설정 화면에 있음
-- **WHEN** "Vault 변경" 버튼을 클릭함
-- **THEN** 폴더 선택 다이얼로그가 표시됨
-- **AND** 새 폴더 선택 시 해당 경로로 Vault가 변경됨
+- **GIVEN** 사용자가 앱을 다시 실행함
+- **WHEN** `$APPDATA/.taskdown/data.db`가 존재함
+- **THEN** 기존 데이터를 자동으로 로드함
 
 ### Requirement: Vault 초기화
 
-The system SHALL initialize the Vault folder structure when a new Vault is selected.
+The system SHALL initialize the Vault folder structure when the app starts.
 
 #### Scenario: 새 Vault 폴더 초기화
 
-- **GIVEN** 사용자가 빈 폴더를 Vault로 선택함
-- **WHEN** 폴더가 선택됨
+- **GIVEN** 앱이 처음 시작됨
+- **WHEN** `$APPDATA/.taskdown/` 폴더가 없음
 - **THEN** `.taskdown/` 디렉토리가 생성됨
 - **AND** `data.db` SQLite 파일이 생성됨
 - **AND** `config.json` 설정 파일이 생성됨
@@ -37,7 +36,7 @@ The system SHALL initialize the Vault folder structure when a new Vault is selec
 
 #### Scenario: 기존 Vault 열기
 
-- **GIVEN** 사용자가 기존 Taskdown Vault 폴더를 선택함
+- **GIVEN** 앱이 시작됨
 - **WHEN** `.taskdown/data.db` 파일이 존재함
 - **THEN** 기존 데이터를 로드함
 - **AND** 필요 시 마이그레이션을 실행함
@@ -98,6 +97,5 @@ The system SHALL store uploaded assets in the Vault assets folder.
 
 ## Dependencies
 
-- Tauri plugin-dialog (폴더 선택)
 - Tauri plugin-sql (SQLite)
 - Drizzle ORM (스키마 관리)
