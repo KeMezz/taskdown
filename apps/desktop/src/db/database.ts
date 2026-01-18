@@ -20,11 +20,15 @@ export const db = drizzle(
       }
 
       if (method === 'get') {
-        const rows = result === null ? null : result;
-        return { rows: rows as unknown[] };
+        // lib.rs returns value array for single row
+        if (result === null || result === undefined) {
+          return { rows: [] };
+        }
+        return { rows: [result as unknown[]] };
       }
 
-      return { rows: (result ?? []) as unknown[] };
+      // 'all' - lib.rs returns array of value arrays
+      return { rows: (result ?? []) as unknown[][] };
     } catch (error) {
       console.error('Database error:', error);
       throw error;

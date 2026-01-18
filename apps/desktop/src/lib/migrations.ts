@@ -47,21 +47,27 @@ async function getCurrentVersion(): Promise<number> {
  * 단일 마이그레이션 실행
  */
 async function applyMigration(migration: MigrationDefinition): Promise<void> {
-  // SQL 문을 세미콜론으로 분리하여 개별 실행
-  const statements = migration.sql
+  // 주석 제거 후 SQL 문을 세미콜론으로 분리하여 개별 실행
+  const sqlWithoutComments = migration.sql
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('--'))
+    .join('\n');
+
+  const statements = sqlWithoutComments
     .split(';')
     .map((s) => s.trim())
-    .filter((s) => s.length > 0 && !s.startsWith('--'));
+    .filter((s) => s.length > 0);
 
   for (const statement of statements) {
     await executeRawSql(statement);
   }
 
   // 마이그레이션 적용 기록
+  // Note: Date 객체 대신 timestamp를 직접 전달 (Drizzle proxy 직렬화 이슈)
   await db.insert(migrations).values({
     version: migration.version,
     name: migration.name,
-    appliedAt: new Date(),
+    appliedAt: new Date(Date.now()),
   });
 }
 
