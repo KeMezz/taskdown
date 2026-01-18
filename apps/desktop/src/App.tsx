@@ -10,15 +10,20 @@ import {
 } from './features/projects';
 import {
   useTasks,
+  useTask,
   useCreateTask,
+  useUpdateTask,
   useUpdateTaskStatus,
+  useReorderTask,
+  useDeleteTask,
 } from './features/tasks';
-import { InboxView, ProjectView, SettingsView } from './views';
+import { TaskDetailPanel } from './features/task-detail';
+import { SettingsView, KanbanView } from './views';
 
 function AppContent() {
   const { isReadOnly, migrationError } = useAppStore();
   const { selectedProjectId, selectProject } = useSidebarStore();
-  const { selectTask } = useTaskStore();
+  const { selectedTaskId, selectTask } = useTaskStore();
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
 
   // 프로젝트 데이터
@@ -36,7 +41,13 @@ function AppContent() {
     selectedProjectId === '__settings__' ? null : selectedProjectId;
   const { data: tasks = [], isLoading: isLoadingTasks } = useTasks(effectiveProjectId);
   const createTask = useCreateTask();
+  const updateTask = useUpdateTask();
   const updateTaskStatus = useUpdateTaskStatus();
+  const reorderTask = useReorderTask();
+  const deleteTask = useDeleteTask();
+
+  // 선택된 태스크 데이터
+  const { data: selectedTask } = useTask(selectedTaskId);
 
   const handleNewProject = () => {
     if (isReadOnly) return;
@@ -59,7 +70,32 @@ function AppContent() {
 
   const handleTaskClick = (taskId: string) => {
     selectTask(taskId);
-    // TODO: Phase 5에서 상세 패널 구현
+  };
+
+  const handleCloseTaskDetail = () => {
+    selectTask(null);
+  };
+
+  const handleUpdateSelectedTask = (data: {
+    title?: string;
+    projectId?: string | null;
+    dueDate?: Date | null;
+    status?: 'backlog' | 'next' | 'waiting' | 'done';
+  }) => {
+    if (!selectedTaskId || isReadOnly) return;
+    const previousProjectId = selectedTask?.projectId ?? null;
+    updateTask.mutate({
+      id: selectedTaskId,
+      data,
+      previousProjectId,
+    });
+  };
+
+  const handleDeleteSelectedTask = () => {
+    if (!selectedTaskId || isReadOnly) return;
+    const projectId = selectedTask?.projectId ?? null;
+    deleteTask.mutate({ id: selectedTaskId, projectId });
+    selectTask(null);
   };
 
   const handleTaskStatusChange = (taskId: string, status: 'backlog' | 'next' | 'waiting' | 'done') => {
@@ -67,6 +103,16 @@ function AppContent() {
     updateTaskStatus.mutate({
       id: taskId,
       status,
+      projectId: effectiveProjectId,
+    });
+  };
+
+  const handleTaskReorder = (taskId: string, status: 'backlog' | 'next' | 'waiting' | 'done', sortOrder: number) => {
+    if (isReadOnly) return;
+    reorderTask.mutate({
+      id: taskId,
+      status,
+      sortOrder,
       projectId: effectiveProjectId,
     });
   };
@@ -106,26 +152,15 @@ function AppContent() {
       return <SettingsView />;
     }
 
-    if (currentProject) {
-      return (
-        <ProjectView
-          project={currentProject}
-          tasks={tasks}
-          onNewTask={handleNewTask}
-          onTaskClick={handleTaskClick}
-          onTaskStatusChange={handleTaskStatusChange}
-          isLoading={isLoadingTasks}
-        />
-      );
-    }
-
-    // Inbox view (default)
+    // 칸반 뷰 (Inbox 또는 프로젝트)
     return (
-      <InboxView
+      <KanbanView
+        project={currentProject}
         tasks={tasks}
         onNewTask={handleNewTask}
         onTaskClick={handleTaskClick}
         onTaskStatusChange={handleTaskStatusChange}
+        onTaskReorder={handleTaskReorder}
         isLoading={isLoadingTasks}
       />
     );
@@ -153,6 +188,18 @@ function AppContent() {
         onClose={() => setIsProjectDialogOpen(false)}
         onSubmit={handleCreateProject}
       />
+
+      {/* Task Detail Panel */}
+      {selectedTask && (
+        <TaskDetailPanel
+          task={selectedTask}
+          projects={projects}
+          isOpen={!!selectedTaskId}
+          onClose={handleCloseTaskDetail}
+          onUpdate={handleUpdateSelectedTask}
+          onDelete={handleDeleteSelectedTask}
+        />
+      )}
     </div>
   );
 }

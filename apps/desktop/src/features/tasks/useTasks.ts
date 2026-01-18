@@ -165,3 +165,57 @@ export function useUpdateTaskStatus() {
     },
   };
 }
+
+/**
+ * 태스크 순서 및 상태 변경 (칸반 보드용)
+ */
+export function useReorderTask() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      status,
+      sortOrder,
+    }: {
+      id: string;
+      status: TaskStatus;
+      sortOrder: number;
+      projectId?: string | null;
+    }): Promise<void> => {
+      await db
+        .update(tasks)
+        .set({ status, sortOrder, updatedAt: new Date() })
+        .where(eq(tasks.id, id));
+    },
+    onMutate: async ({ id, status, sortOrder, projectId }) => {
+      // 낙관적 업데이트
+      await queryClient.cancelQueries({ queryKey: queryKeys.tasks(projectId ?? null) });
+
+      const previousTasks = queryClient.getQueryData<Task[]>(
+        queryKeys.tasks(projectId ?? null)
+      );
+
+      if (previousTasks) {
+        const updatedTasks = previousTasks.map((task) =>
+          task.id === id ? { ...task, status, sortOrder } : task
+        );
+        queryClient.setQueryData(queryKeys.tasks(projectId ?? null), updatedTasks);
+      }
+
+      return { previousTasks };
+    },
+    onError: (_, { projectId }, context) => {
+      // 에러 시 롤백
+      if (context?.previousTasks) {
+        queryClient.setQueryData(
+          queryKeys.tasks(projectId ?? null),
+          context.previousTasks
+        );
+      }
+    },
+    onSettled: (_, __, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks(projectId ?? null) });
+    },
+  });
+}
