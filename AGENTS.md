@@ -16,3 +16,10 @@ Use `@/openspec/AGENTS.md` to learn:
 Keep this managed block so 'openspec update' can refresh the instructions.
 
 <!-- OPENSPEC:END -->
+
+<!-- User defined rules:START -->
+Always respond in Korean.
+
+@.claude/rules/implementation.md
+@.claude/rules/pr-workflow.md
+<!-- User defined rules:END -->
