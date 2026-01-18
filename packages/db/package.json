@@ -18,6 +18,10 @@
     "./migrations": {
       "import": "./dist/migrations/index.js",
       "types": "./dist/migrations/index.d.ts"
+    },
+    "./testing": {
+      "import": "./dist/testing/index.js",
+      "types": "./dist/testing/index.d.ts"
     }
   },
   "files": [
@@ -33,9 +37,12 @@
     "drizzle-orm": "^0.38.3"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.6.2",
     "drizzle-kit": "^0.30.2",
     "tsup": "^8.3.5",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^4.0.17"
   },
   "peerDependencies": {
     "drizzle-orm": "^0.38.0"
