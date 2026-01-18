@@ -1,0 +1,20 @@
+{
+  "name": "taskdown",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @taskdown/desktop dev",
+    "build": "pnpm --filter @taskdown/desktop build",
+    "build:all": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2"
+  },
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

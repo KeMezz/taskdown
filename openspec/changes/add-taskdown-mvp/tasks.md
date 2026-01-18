@@ -5,52 +5,52 @@
 ## Phase 0: 프로젝트 초기화
 
 ### 0.1 모노레포 셋업
-- [ ] 루트 package.json 생성 (`"private": true`)
-- [ ] pnpm-workspace.yaml 생성
-- [ ] 디렉토리 구조 생성 (apps/, packages/, tooling/)
-- [ ] 루트 스크립트 설정 (dev, build, lint, typecheck)
+- [x] 루트 package.json 생성 (`"private": true`)
+- [x] pnpm-workspace.yaml 생성
+- [x] 디렉토리 구조 생성 (apps/, packages/, tooling/)
+- [x] 루트 스크립트 설정 (dev, build, lint, typecheck)
 
 ### 0.2 @taskdown/desktop 패키지 (apps/desktop)
-- [ ] Tauri 2.x + React 19 + TypeScript 프로젝트 생성
-- [ ] Vite 설정 및 개발 환경 구성
-- [ ] Tailwind CSS 4 설치 및 설정
-- [ ] apps/desktop/src/ 폴더 구조 (features/, stores/)
+- [x] Tauri 2.x + React 19 + TypeScript 프로젝트 생성
+- [x] Vite 설정 및 개발 환경 구성
+- [x] Tailwind CSS 4 설치 및 설정
+- [x] apps/desktop/src/ 폴더 구조 (features/, stores/)
 
 ### 0.3 @taskdown/ui 패키지 (packages/ui)
-- [ ] package.json 생성 (`@taskdown/ui`)
-- [ ] TypeScript 설정
-- [ ] Tailwind CSS 설정 (preset으로 공유)
-- [ ] src/components/, src/hooks/ 구조 생성
-- [ ] 빌드 설정 (tsup 또는 unbuild)
+- [x] package.json 생성 (`@taskdown/ui`)
+- [x] TypeScript 설정
+- [x] Tailwind CSS 설정 (preset으로 공유)
+- [x] src/components/, src/hooks/ 구조 생성
+- [x] 빌드 설정 (tsup 또는 unbuild)
 
 ### 0.4 @taskdown/db 패키지 (packages/db)
-- [ ] package.json 생성 (`@taskdown/db`)
-- [ ] TypeScript 설정
-- [ ] Drizzle ORM + drizzle-kit 설치
-- [ ] src/schema.ts, src/types.ts 구조 생성
+- [x] package.json 생성 (`@taskdown/db`)
+- [x] TypeScript 설정
+- [x] Drizzle ORM + drizzle-kit 설치
+- [x] src/schema.ts, src/types.ts 구조 생성
 
 ### 0.5 공유 설정 (tooling/)
-- [ ] ESLint 공유 설정 (tooling/eslint/)
-- [ ] TypeScript 공유 설정 (tooling/typescript/)
-- [ ] Prettier 설정 (루트)
+- [x] ESLint 공유 설정 (tooling/eslint/)
+- [x] TypeScript 공유 설정 (tooling/typescript/)
+- [x] Prettier 설정 (루트)
 
 ### 0.6 Tauri 플러그인 및 Drizzle Proxy PoC
-- [ ] tauri-plugin-sql 설치 및 권한 설정
-- [ ] tauri-plugin-notification 설치 및 권한 설정
-- [ ] tauri-plugin-dialog 설치 및 권한 설정
-- [ ] Drizzle Proxy PoC 검증
-  - [ ] Rust 측 `run_sql` command 기본 구현
-  - [ ] TypeScript 측 drizzle proxy 연결 테스트
-  - [ ] 3가지 메서드 (run/get/all) 동작 확인
-  - [ ] 기본 타입 변환 검증 (NULL, String, Number, Boolean)
+- [x] tauri-plugin-sql 설치 및 권한 설정
+- [x] tauri-plugin-notification 설치 및 권한 설정
+- [x] tauri-plugin-dialog 설치 및 권한 설정
+- [x] Drizzle Proxy PoC 검증
+  - [x] Rust 측 `run_sql` command 기본 구현
+  - [x] TypeScript 측 drizzle proxy 연결 테스트
+  - [x] 3가지 메서드 (run/get/all) 동작 확인
+  - [x] 기본 타입 변환 검증 (NULL, String, Number, Boolean)
 
 ### 0.7 앱 의존성 설치 (apps/desktop)
-- [ ] @taskdown/ui, @taskdown/db workspace 의존성 연결
-- [ ] Zustand 설치
-- [ ] React Query 설치
-- [ ] TipTap 에디터 패키지 설치
-- [ ] dnd-kit 설치
-- [ ] nanoid 설치
+- [x] @taskdown/ui, @taskdown/db workspace 의존성 연결
+- [x] Zustand 설치
+- [x] React Query 설치
+- [x] TipTap 에디터 패키지 설치
+- [x] dnd-kit 설치
+- [x] nanoid 설치
 
 **검증**: `pnpm dev`로 앱 실행, Tauri 윈도우 열림 확인
 
