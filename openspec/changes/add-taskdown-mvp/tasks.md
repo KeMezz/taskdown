@@ -34,11 +34,15 @@
 - [ ] TypeScript 공유 설정 (tooling/typescript/)
 - [ ] Prettier 설정 (루트)
 
-### 0.6 Tauri 플러그인 설치
+### 0.6 Tauri 플러그인 및 Drizzle Proxy PoC
 - [ ] tauri-plugin-sql 설치 및 권한 설정
 - [ ] tauri-plugin-notification 설치 및 권한 설정
 - [ ] tauri-plugin-dialog 설치 및 권한 설정
-- [ ] 플러그인 동작 확인 (PoC)
+- [ ] Drizzle Proxy PoC 검증
+  - [ ] Rust 측 `run_sql` command 기본 구현
+  - [ ] TypeScript 측 drizzle proxy 연결 테스트
+  - [ ] 3가지 메서드 (run/get/all) 동작 확인
+  - [ ] 기본 타입 변환 검증 (NULL, String, Number, Boolean)
 
 ### 0.7 앱 의존성 설치 (apps/desktop)
 - [ ] @taskdown/ui, @taskdown/db workspace 의존성 연결

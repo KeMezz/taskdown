@@ -639,6 +639,44 @@ export function handleImageUploadError(error: unknown) {
 }
 ```
 
+### 이미지 로드 실패 처리
+
+에디터에서 이미지가 누락된 경우 fallback UI를 표시합니다:
+
+```typescript
+// features/editor/ImageRenderer.tsx
+
+interface TaskImageProps {
+  src: string;
+  alt?: string;
+}
+
+export function TaskImage({ src, alt }: TaskImageProps) {
+  const [hasError, setHasError] = useState(false);
+
+  if (hasError) {
+    return (
+      <div
+        className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 border border-gray-200 rounded text-gray-500"
+        title="이미지를 찾을 수 없습니다"
+      >
+        <ImageOffIcon className="w-4 h-4" />
+        <span className="text-sm">이미지를 찾을 수 없습니다</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setHasError(true)}
+      className="task-image"
+    />
+  );
+}
+```
+
 ## 9. 알림 스케줄링
 
 ```typescript
@@ -709,6 +747,30 @@ export async function checkAndSendReminders() {
 - 마이그레이션 실패 시 해당 트랜잭션 롤백
 - 에러 로그 저장 후 사용자에게 알림 표시
 - 앱은 읽기 전용 모드로 동작 (데이터 보호)
+
+#### 읽기 전용 모드 정의
+
+마이그레이션 실패 시 앱은 읽기 전용 모드로 진입합니다:
+
+| 구분 | 동작 |
+|------|------|
+| **허용** | 태스크 조회, 검색, 필터링, 프로젝트 탐색 |
+| **차단** | 태스크 생성/수정/삭제, 프로젝트 생성/수정/삭제 |
+| **UI 표현** | 상단에 경고 배너 표시 + 모든 입력 필드 disabled |
+| **복구 방법** | 설정 → 데이터베이스 → "마이그레이션 재시도" 버튼 |
+
+```typescript
+// stores/appStore.ts
+
+interface AppState {
+  vaultPath: string | null;
+  isInitialized: boolean;
+  isReadOnly: boolean;  // 마이그레이션 실패 시 true
+  migrationError: string | null;
+  setReadOnlyMode: (error: string) => void;
+  retryMigration: () => Promise<boolean>;
+}
+```
 
 **롤백 전략**:
 - 각 마이그레이션은 `up`/`down` 함수 쌍으로 구현

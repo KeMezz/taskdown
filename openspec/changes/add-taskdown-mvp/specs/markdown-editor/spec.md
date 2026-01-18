@@ -125,6 +125,13 @@ The system SHALL allow users to insert images into notes.
 - **WHEN** 에디터에서 `⌘ + V`를 누름
 - **THEN** 이미지가 삽입됨
 
+#### Scenario: 이미지 로드 실패 처리
+
+- **GIVEN** 태스크에 이미지 참조가 포함되어 있음
+- **WHEN** `.taskdown/assets/` 폴더에서 해당 이미지 파일이 없음
+- **THEN** 깨진 이미지 placeholder가 표시됨
+- **AND** "이미지를 찾을 수 없습니다" 툴팁이 표시됨
+
 ### Requirement: 링크 지원
 
 The system SHALL support hyperlinks.

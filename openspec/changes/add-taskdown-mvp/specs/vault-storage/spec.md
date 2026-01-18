@@ -53,6 +53,14 @@ The system SHALL automatically migrate the database schema when the app version 
 - **THEN** 마이그레이션이 자동으로 실행됨
 - **AND** 사용자 데이터가 보존됨
 
+#### Scenario: 마이그레이션 실패 시 읽기 전용 모드
+
+- **GIVEN** 앱이 시작되고 DB 마이그레이션이 실행됨
+- **WHEN** 스키마 마이그레이션이 실패함
+- **THEN** 앱이 읽기 전용 모드로 진입함
+- **AND** 상단에 오류 배너와 "재시도" 버튼이 표시됨
+- **AND** `data.db.backup` 파일이 자동 생성됨
+
 ### Requirement: 설정 저장
 
 The system SHALL persist user preferences in the Vault config file.
