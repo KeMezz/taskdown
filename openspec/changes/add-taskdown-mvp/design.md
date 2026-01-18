@@ -260,13 +260,20 @@ async fn run_sql(
         }
         // SELECT 단일 행
         "get" => {
+            use rusqlite::types::ValueRef;
             let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
             let columns: Vec<String> = stmt.column_names().iter().map(|s| s.to_string()).collect();
             let row = stmt
                 .query_row(params_from_iter(sqlite_params.iter().map(|p| p.as_ref())), |row| {
                     let mut obj = serde_json::Map::new();
                     for (i, col) in columns.iter().enumerate() {
-                        let value: Value = row.get(i).unwrap_or(Value::Null);
+                        let value = match row.get_ref(i)? {
+                            ValueRef::Null => Value::Null,
+                            ValueRef::Integer(n) => Value::Number(n.into()),
+                            ValueRef::Real(f) => json!(f),
+                            ValueRef::Text(s) => Value::String(String::from_utf8_lossy(s).to_string()),
+                            ValueRef::Blob(_) => Value::Null, // MVP에서는 blob 미사용
+                        };
                         obj.insert(col.clone(), value);
                     }
                     Ok(Value::Object(obj))
@@ -276,13 +283,20 @@ async fn run_sql(
         }
         // SELECT 다중 행
         "all" => {
+            use rusqlite::types::ValueRef;
             let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
             let columns: Vec<String> = stmt.column_names().iter().map(|s| s.to_string()).collect();
             let rows = stmt
                 .query_map(params_from_iter(sqlite_params.iter().map(|p| p.as_ref())), |row| {
                     let mut obj = serde_json::Map::new();
                     for (i, col) in columns.iter().enumerate() {
-                        let value: Value = row.get(i).unwrap_or(Value::Null);
+                        let value = match row.get_ref(i)? {
+                            ValueRef::Null => Value::Null,
+                            ValueRef::Integer(n) => Value::Number(n.into()),
+                            ValueRef::Real(f) => json!(f),
+                            ValueRef::Text(s) => Value::String(String::from_utf8_lossy(s).to_string()),
+                            ValueRef::Blob(_) => Value::Null, // MVP에서는 blob 미사용
+                        };
                         obj.insert(col.clone(), value);
                     }
                     Ok(Value::Object(obj))
@@ -559,7 +573,8 @@ const ALLOWED_FORMATS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 export class ImageUploadError extends Error {
   constructor(
     message: string,
-    public code: 'SIZE_EXCEEDED' | 'INVALID_FORMAT' | 'SAVE_FAILED'
+    public code: 'SIZE_EXCEEDED' | 'INVALID_FORMAT' | 'SAVE_FAILED',
+    public filename?: string
   ) {
     super(message);
     this.name = 'ImageUploadError';
@@ -778,5 +793,5 @@ interface AppState {
 - 자동 롤백은 지원하지 않음 (데이터 무결성 우선)
 
 **데이터 백업**:
-- 마이그레이션 실행 전 `data.db.backup` 자동 생성
+- 마이그레이션 시작 전 `data.db.backup-{timestamp}` 자동 생성 (예: `data.db.backup-20260118T120000`)
 - 백업 파일은 최근 3개 유지 (이전 백업 자동 삭제)
