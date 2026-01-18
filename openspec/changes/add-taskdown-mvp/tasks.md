@@ -59,27 +59,27 @@
 ## Phase 1: 데이터 레이어 (vault-storage)
 
 ### 1.1 Drizzle 스키마 정의 (packages/db)
-- [ ] projects 테이블 스키마 작성
-- [ ] tasks 테이블 스키마 작성
-- [ ] reminders 테이블 스키마 작성
-- [ ] 관계(relations) 정의
-- [ ] 타입 내보내기 (Task, Project, Reminder)
+- [x] projects 테이블 스키마 작성
+- [x] tasks 테이블 스키마 작성
+- [x] reminders 테이블 스키마 작성
+- [x] 관계(relations) 정의
+- [x] 타입 내보내기 (Task, Project, Reminder)
 
 ### 1.2 Drizzle Proxy 구현
-- [ ] Rust 측 `run_sql` command 구현
-- [ ] TypeScript 측 drizzle proxy 설정
-- [ ] 기본 CRUD 동작 테스트
+- [x] Rust 측 `run_sql` command 구현
+- [x] TypeScript 측 drizzle proxy 설정
+- [x] 기본 CRUD 동작 테스트
 
 ### 1.3 마이그레이션 시스템
-- [ ] drizzle-kit으로 마이그레이션 SQL 생성
-- [ ] 앱 시작 시 마이그레이션 실행 로직 구현
-- [ ] 버전 테이블로 마이그레이션 상태 관리
+- [x] drizzle-kit으로 마이그레이션 SQL 생성
+- [x] 앱 시작 시 마이그레이션 실행 로직 구현
+- [x] 버전 테이블로 마이그레이션 상태 관리
 
 ### 1.4 Vault 관리
-- [ ] 폴더 선택 다이얼로그 연동
-- [ ] .taskdown/ 폴더 구조 초기화 로직
-- [ ] config.json 읽기/쓰기
-- [ ] 앱 시작 시 Vault 경로 확인 및 로드
+- [x] 폴더 선택 다이얼로그 연동
+- [x] .taskdown/ 폴더 구조 초기화 로직
+- [x] config.json 읽기/쓰기
+- [x] 앱 시작 시 Vault 경로 확인 및 로드
 
 **검증**: Vault 선택 → DB 생성 → 앱 재시작 → 데이터 유지 확인
 
