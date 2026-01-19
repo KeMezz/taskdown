@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAppStore, useSidebarStore, useTaskStore } from './stores';
 import { tryAutoLoadVault, QueryProvider } from './lib';
 import { VaultSetup } from './features/vault';
 import { MainLayout } from './features/layout';
+import type { ToolbarHandle } from './features/layout';
+import { useTheme } from './hooks';
+import { ErrorBoundary, ToastContainer } from './components';
 import {
   useProjects,
   useCreateProject,
@@ -43,6 +46,10 @@ function AppContent() {
   const [editingProject, setEditingProject] = useState<import('@taskdown/db').Project | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<import('@taskdown/db').Project | null>(null);
+  const toolbarRef = useRef<ToolbarHandle>(null);
+
+  // 테마 적용
+  useTheme();
 
   // 알림 스케줄러 활성화
   useReminderScheduler();
@@ -209,6 +216,7 @@ function AppContent() {
       const isMac = navigator.platform.toUpperCase().includes('MAC');
       const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
 
+      // ⌘ + N: 새 태스크
       if (cmdOrCtrl && e.key === 'n' && !e.shiftKey) {
         e.preventDefault();
         // 새 태스크 입력 필드에 포커스 (QuickTaskInput에서 처리)
@@ -216,6 +224,7 @@ function AppContent() {
         input?.focus();
       }
 
+      // ⌘ + ⇧ + N: 새 프로젝트
       if (cmdOrCtrl && e.shiftKey && e.key === 'N') {
         e.preventDefault();
         if (!isReadOnly) {
@@ -223,15 +232,35 @@ function AppContent() {
         }
       }
 
+      // ⌘ + ,: 설정
       if (cmdOrCtrl && e.key === ',') {
         e.preventDefault();
         selectProject('__settings__');
+      }
+
+      // ⌘ + F: 검색 (설정 화면이 아닐 때만)
+      if (cmdOrCtrl && e.key === 'f') {
+        e.preventDefault();
+        if (selectedProjectId !== '__settings__') {
+          toolbarRef.current?.focusSearch();
+        }
+      }
+
+      // Esc: 패널/모달 닫기 (컨텍스트 메뉴 > 태스크 상세 패널 순서로 처리)
+      if (e.key === 'Escape') {
+        // 컨텍스트 메뉴가 열려있으면 닫기
+        if (contextMenu) {
+          e.preventDefault();
+          setContextMenu(null);
+          return;
+        }
+        // 태스크 상세 패널은 자체적으로 Esc 처리
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectProject, isReadOnly]);
+  }, [selectProject, isReadOnly, selectedProjectId, contextMenu]);
 
   const renderCurrentView = () => {
     if (selectedProjectId === '__settings__') {
@@ -241,6 +270,7 @@ function AppContent() {
     // 칸반 뷰 (Inbox 또는 프로젝트)
     return (
       <KanbanView
+        ref={toolbarRef}
         project={currentProject}
         tasks={tasks}
         onNewTask={handleNewTask}
@@ -253,10 +283,10 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       {isReadOnly && (
-        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2">
-          <p className="text-sm text-yellow-800">
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 px-4 py-2">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200">
             <span className="font-medium">읽기 전용 모드:</span> {migrationError}
           </p>
         </div>
@@ -385,13 +415,21 @@ function App() {
   }
 
   if (!isInitialized) {
-    return <VaultSetup />;
+    return (
+      <ErrorBoundary>
+        <VaultSetup />
+        <ToastContainer />
+      </ErrorBoundary>
+    );
   }
 
   return (
-    <QueryProvider>
-      <AppContent />
-    </QueryProvider>
+    <ErrorBoundary>
+      <QueryProvider>
+        <AppContent />
+      </QueryProvider>
+      <ToastContainer />
+    </ErrorBoundary>
   );
 }
 

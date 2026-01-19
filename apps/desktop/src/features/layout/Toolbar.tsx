@@ -1,3 +1,5 @@
+import { forwardRef, useImperativeHandle, useRef } from 'react';
+
 interface ToolbarProps {
   title: string;
   onNewTask?: () => void;
@@ -5,7 +7,23 @@ interface ToolbarProps {
   searchPlaceholder?: string;
 }
 
-export function Toolbar({ title, onNewTask, onSearch, searchPlaceholder = '검색...' }: ToolbarProps) {
+export interface ToolbarHandle {
+  focusSearch: () => void;
+}
+
+export const Toolbar = forwardRef<ToolbarHandle, ToolbarProps>(function Toolbar(
+  { title, onNewTask, onSearch, searchPlaceholder = '검색...' },
+  ref
+) {
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    focusSearch: () => {
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    },
+  }));
+
   return (
     <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4">
       <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
@@ -15,6 +33,7 @@ export function Toolbar({ title, onNewTask, onSearch, searchPlaceholder = '검�
         {onSearch && (
           <div className="relative">
             <input
+              ref={searchInputRef}
               type="text"
               placeholder={searchPlaceholder}
               onChange={(e) => onSearch(e.target.value)}
@@ -47,4 +66,4 @@ export function Toolbar({ title, onNewTask, onSearch, searchPlaceholder = '검�
       </div>
     </header>
   );
-}
+});

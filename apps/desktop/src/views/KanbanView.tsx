@@ -1,4 +1,6 @@
+import { forwardRef } from 'react';
 import { Toolbar } from '../features/layout';
+import type { ToolbarHandle } from '../features/layout';
 import { QuickTaskInput } from '../features/tasks';
 import { KanbanBoard } from '../features/kanban';
 import type { Task, Project, TaskStatus } from '@taskdown/db';
@@ -13,20 +15,23 @@ interface KanbanViewProps {
   isLoading?: boolean;
 }
 
-export function KanbanView({
-  project,
-  tasks,
-  onNewTask,
-  onTaskClick,
-  onTaskStatusChange,
-  onTaskReorder,
-  isLoading = false,
-}: KanbanViewProps) {
+export const KanbanView = forwardRef<ToolbarHandle, KanbanViewProps>(function KanbanView(
+  {
+    project,
+    tasks,
+    onNewTask,
+    onTaskClick,
+    onTaskStatusChange,
+    onTaskReorder,
+    isLoading = false,
+  },
+  ref
+) {
   const title = project ? project.name : 'Inbox';
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
-      <Toolbar title={title} />
+      <Toolbar ref={ref} title={title} />
 
       {/* 빠른 태스크 입력 */}
       <div className="px-4 pt-4">
@@ -59,4 +64,4 @@ export function KanbanView({
       </div>
     </div>
   );
-}
+});
