@@ -7,7 +7,53 @@ import { eq, lte, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { db } from '../../db/database';
 import { reminders, tasks } from '@taskdown/db';
-import type { Reminder, NewReminder } from '@taskdown/db';
+import type { Reminder, NewReminder, TaskStatus } from '@taskdown/db';
+
+/** 알림 조회 간격 (1분) */
+export const REMINDER_REFETCH_INTERVAL = 60000;
+/** 알림 데이터 stale 시간 (30초) */
+export const REMINDER_STALE_TIME = 30000;
+
+/** 태스크 정보가 포함된 리마인더 타입 */
+export interface ReminderWithTask extends Reminder {
+  task: { title: string; status: TaskStatus } | null;
+}
+
+/**
+ * 미발송 알림과 태스크 정보를 JOIN하여 조회
+ * N+1 쿼리 문제를 해결하기 위한 공통 함수
+ */
+export async function fetchPendingRemindersWithTasks(): Promise<ReminderWithTask[]> {
+  const now = new Date();
+
+  const result = await db
+    .select({
+      id: reminders.id,
+      taskId: reminders.taskId,
+      remindAt: reminders.remindAt,
+      isSent: reminders.isSent,
+      createdAt: reminders.createdAt,
+      taskTitle: tasks.title,
+      taskStatus: tasks.status,
+    })
+    .from(reminders)
+    .leftJoin(tasks, eq(reminders.taskId, tasks.id))
+    .where(
+      and(
+        eq(reminders.isSent, false),
+        lte(reminders.remindAt, now)
+      )
+    );
+
+  return result.map((row) => ({
+    id: row.id,
+    taskId: row.taskId,
+    remindAt: row.remindAt,
+    isSent: row.isSent ?? false,
+    createdAt: row.createdAt,
+    task: row.taskTitle ? { title: row.taskTitle, status: row.taskStatus as TaskStatus } : null,
+  }));
+}
 
 export const reminderQueryKeys = {
   all: ['reminders'] as const,
@@ -35,40 +81,14 @@ export function useReminders(taskId: string | null) {
 
 /**
  * 발송 대기 중인 알림 조회 (현재 시간 이전, 미발송)
+ * JOIN을 사용하여 N+1 쿼리 문제 해결
  */
 export function usePendingReminders() {
   return useQuery({
     queryKey: reminderQueryKeys.pending,
-    queryFn: async () => {
-      const now = new Date();
-      const pendingReminders = await db
-        .select()
-        .from(reminders)
-        .where(
-          and(
-            eq(reminders.isSent, false),
-            lte(reminders.remindAt, now)
-          )
-        );
-
-      // 각 리마인더에 대한 태스크 정보 조회
-      const result = await Promise.all(
-        pendingReminders.map(async (reminder) => {
-          const taskResult = await db
-            .select({ title: tasks.title, status: tasks.status })
-            .from(tasks)
-            .where(eq(tasks.id, reminder.taskId));
-          return {
-            ...reminder,
-            task: taskResult[0] || null,
-          };
-        })
-      );
-
-      return result;
-    },
-    refetchInterval: 60000, // 1분마다 자동 갱신
-    staleTime: 30000, // 30초
+    queryFn: fetchPendingRemindersWithTasks,
+    refetchInterval: REMINDER_REFETCH_INTERVAL,
+    staleTime: REMINDER_STALE_TIME,
   });
 }
 

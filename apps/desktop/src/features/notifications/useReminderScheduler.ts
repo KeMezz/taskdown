@@ -5,14 +5,19 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { eq, lte, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '../../db/database';
-import { reminders, tasks } from '@taskdown/db';
+import { reminders } from '@taskdown/db';
 import { sendTaskNotification } from './notifications';
 import { useAppStore } from '../../stores';
-import { reminderQueryKeys } from './useReminders';
+import {
+  reminderQueryKeys,
+  fetchPendingRemindersWithTasks,
+  REMINDER_REFETCH_INTERVAL,
+} from './useReminders';
 
-const CHECK_INTERVAL = 60000; // 1분
+/** 앱 초기화 완료 대기 시간 (2초) */
+const INITIAL_DELAY = 2000;
 
 /**
  * 알림 스케줄러 훅
@@ -26,6 +31,7 @@ export function useReminderScheduler() {
 
   /**
    * 미발송 알림 조회 및 발송
+   * JOIN을 사용하여 N+1 쿼리 문제 해결
    */
   const processReminders = useCallback(async () => {
     // 이미 처리 중이면 스킵
@@ -37,30 +43,12 @@ export function useReminderScheduler() {
     isProcessingRef.current = true;
 
     try {
-      const now = new Date();
-
-      // 미발송 + 현재 시간 이전인 알림 조회
-      const pendingReminders = await db
-        .select()
-        .from(reminders)
-        .where(
-          and(
-            eq(reminders.isSent, false),
-            lte(reminders.remindAt, now)
-          )
-        );
+      // 미발송 알림과 태스크 정보를 한 번의 쿼리로 조회
+      const pendingReminders = await fetchPendingRemindersWithTasks();
 
       for (const reminder of pendingReminders) {
-        // 태스크 정보 조회
-        const taskResult = await db
-          .select({ title: tasks.title, status: tasks.status })
-          .from(tasks)
-          .where(eq(tasks.id, reminder.taskId));
-
-        const task = taskResult[0];
-
         // 태스크가 없거나 완료된 경우 알림 발송하지 않고 sent 처리
-        if (!task || task.status === 'done') {
+        if (!reminder.task || reminder.task.status === 'done') {
           await db
             .update(reminders)
             .set({ isSent: true })
@@ -69,7 +57,7 @@ export function useReminderScheduler() {
         }
 
         // 알림 발송
-        const sent = await sendTaskNotification(task.title);
+        const sent = await sendTaskNotification(reminder.task.title);
 
         // 발송 결과와 관계없이 isSent = true로 마킹 (중복 발송 방지)
         await db
@@ -78,7 +66,7 @@ export function useReminderScheduler() {
           .where(eq(reminders.id, reminder.id));
 
         if (sent) {
-          console.log(`Reminder sent for task: ${task.title}`);
+          console.log(`Reminder sent for task: ${reminder.task.title}`);
         }
       }
 
@@ -97,10 +85,10 @@ export function useReminderScheduler() {
    * 앱 시작 시 누락된 알림 즉시 처리
    */
   useEffect(() => {
-    // 초기 처리 (약간의 딜레이 후)
+    // 초기 처리 (앱 초기화 완료 대기 후)
     const initialTimeout = setTimeout(() => {
       processReminders();
-    }, 2000);
+    }, INITIAL_DELAY);
 
     return () => clearTimeout(initialTimeout);
   }, [processReminders]);
@@ -121,7 +109,7 @@ export function useReminderScheduler() {
     // 스케줄러 시작
     intervalRef.current = setInterval(() => {
       processReminders();
-    }, CHECK_INTERVAL);
+    }, REMINDER_REFETCH_INTERVAL);
 
     return () => {
       if (intervalRef.current) {
