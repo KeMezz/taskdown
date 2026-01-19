@@ -19,6 +19,7 @@ describe("appStore", () => {
       expect(state.isInitializing).toBe(false);
       expect(state.isReadOnly).toBe(false);
       expect(state.migrationError).toBeNull();
+      expect(state.notificationPermission).toBeNull();
     });
   });
 
@@ -81,6 +82,26 @@ describe("appStore", () => {
     });
   });
 
+  describe("setNotificationPermission", () => {
+    it("should set notification permission to granted", () => {
+      useAppStore.getState().setNotificationPermission("granted");
+
+      expect(useAppStore.getState().notificationPermission).toBe("granted");
+    });
+
+    it("should set notification permission to denied", () => {
+      useAppStore.getState().setNotificationPermission("denied");
+
+      expect(useAppStore.getState().notificationPermission).toBe("denied");
+    });
+
+    it("should set notification permission to default", () => {
+      useAppStore.getState().setNotificationPermission("default");
+
+      expect(useAppStore.getState().notificationPermission).toBe("default");
+    });
+  });
+
   describe("reset", () => {
     it("should reset all state to initial values", () => {
       // Modify all state values
@@ -88,6 +109,7 @@ describe("appStore", () => {
       useAppStore.getState().setInitialized(true);
       useAppStore.getState().setInitializing(true);
       useAppStore.getState().setReadOnlyMode("Error");
+      useAppStore.getState().setNotificationPermission("granted");
 
       // Reset
       useAppStore.getState().reset();
@@ -99,6 +121,7 @@ describe("appStore", () => {
       expect(state.isInitializing).toBe(false);
       expect(state.isReadOnly).toBe(false);
       expect(state.migrationError).toBeNull();
+      expect(state.notificationPermission).toBeNull();
     });
   });
 });

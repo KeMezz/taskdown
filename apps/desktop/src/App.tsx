@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppStore, useSidebarStore, useTaskStore } from './stores';
-import { tryAutoLoadVault, QueryProvider } from './lib';
+import { tryAutoLoadVault, QueryProvider, loadVaultConfig } from './lib';
 import { VaultSetup } from './features/vault';
 import { MainLayout } from './features/layout';
 import {
@@ -23,6 +23,11 @@ import {
 } from './features/tasks';
 import { TaskDetailPanel } from './features/task-detail';
 import { SettingsView, KanbanView } from './views';
+import {
+  checkNotificationPermission,
+  useReminderScheduler,
+  useSyncTaskReminder,
+} from './features/notifications';
 
 interface ContextMenuState {
   project: import('@taskdown/db').Project;
@@ -31,19 +36,44 @@ interface ContextMenuState {
 }
 
 function AppContent() {
-  const { isReadOnly, migrationError } = useAppStore();
+  const { isReadOnly, migrationError, vaultPath, setNotificationPermission } = useAppStore();
   const { selectedProjectId, selectProject } = useSidebarStore();
   const { selectedTaskId, selectTask } = useTaskStore();
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<import('@taskdown/db').Project | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<import('@taskdown/db').Project | null>(null);
+  const [defaultReminderTime, setDefaultReminderTime] = useState('09:00');
+
+  // 알림 스케줄러 활성화
+  useReminderScheduler();
+
+  // 알림 동기화 훅
+  const syncTaskReminder = useSyncTaskReminder();
 
   // 프로젝트 데이터
   const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
+
+  // 앱 시작 시 알림 권한 확인 및 설정 로드
+  useEffect(() => {
+    async function initNotifications() {
+      // 알림 권한 상태 확인
+      const permission = await checkNotificationPermission();
+      setNotificationPermission(permission);
+
+      // 설정에서 기본 알림 시간 로드
+      if (vaultPath) {
+        const config = await loadVaultConfig(vaultPath);
+        if (config?.defaultReminderTime) {
+          setDefaultReminderTime(config.defaultReminderTime);
+        }
+      }
+    }
+    initNotifications();
+  }, [setNotificationPermission, vaultPath]);
 
   // 현재 프로젝트
   const currentProject =
@@ -136,6 +166,15 @@ function AppContent() {
       data,
       previousProjectId,
     });
+
+    // 마감일이 변경되면 알림 동기화
+    if ('dueDate' in data) {
+      syncTaskReminder.mutate({
+        taskId: selectedTaskId,
+        dueDate: data.dueDate ?? null,
+        defaultReminderTime,
+      });
+    }
   };
 
   const handleDeleteSelectedTask = () => {

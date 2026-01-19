@@ -4,6 +4,8 @@
 
 import { create } from 'zustand';
 
+export type NotificationPermission = 'granted' | 'denied' | 'default' | null;
+
 export interface AppState {
   /** Vault 폴더 경로 */
   vaultPath: string | null;
@@ -15,6 +17,8 @@ export interface AppState {
   isReadOnly: boolean;
   /** 마이그레이션 에러 메시지 */
   migrationError: string | null;
+  /** 알림 권한 상태 */
+  notificationPermission: NotificationPermission;
 
   /** Vault 경로 설정 */
   setVaultPath: (path: string | null) => void;
@@ -26,6 +30,8 @@ export interface AppState {
   setReadOnlyMode: (error: string) => void;
   /** 읽기 전용 모드 해제 */
   clearReadOnlyMode: () => void;
+  /** 알림 권한 상태 설정 */
+  setNotificationPermission: (permission: NotificationPermission) => void;
   /** 상태 초기화 */
   reset: () => void;
 }
@@ -36,6 +42,7 @@ const initialState = {
   isInitializing: false,
   isReadOnly: false,
   migrationError: null,
+  notificationPermission: null as NotificationPermission,
 };
 
 export const useAppStore = create<AppState>((set) => ({
@@ -58,6 +65,8 @@ export const useAppStore = create<AppState>((set) => ({
       isReadOnly: false,
       migrationError: null,
     }),
+
+  setNotificationPermission: (permission) => set({ notificationPermission: permission }),
 
   reset: () => set(initialState),
 }));
