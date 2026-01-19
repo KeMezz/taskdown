@@ -11,7 +11,6 @@ export {
   useMarkReminderSent,
   useDeleteReminder,
   useDeleteTaskReminders,
-  useSyncTaskReminder,
   reminderQueryKeys,
 } from './useReminders';
 

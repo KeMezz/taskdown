@@ -8,43 +8,58 @@
 
 The system SHALL request notification permissions from the user.
 
-#### Scenario: 최초 알림 권한 요청
+#### Scenario: 앱 시작 시 알림 권한 요청
 
-- **GIVEN** 사용자가 마감일이 있는 태스크를 처음 생성함
-- **WHEN** 알림 권한이 부여되지 않음
-- **THEN** OS 알림 권한 요청 다이얼로그가 표시됨
+- **GIVEN** 사용자가 앱을 처음 실행함
+- **WHEN** 알림 권한이 부여되지 않음 (default 상태)
+- **THEN** OS 알림 권한 요청 다이얼로그가 자동으로 표시됨
 - **AND** 권한 부여 시 알림이 활성화됨
 
 #### Scenario: 권한 거부 시 안내
 
 - **GIVEN** 사용자가 알림 권한을 거부함
-- **WHEN** 마감일을 설정하려 함
+- **WHEN** 설정 화면을 확인함
 - **THEN** 알림이 비활성화됨을 안내하는 메시지가 표시됨
-- **AND** 설정에서 권한을 다시 요청할 수 있는 링크가 제공됨
+- **AND** 설정에서 권한을 다시 요청할 수 있는 버튼이 제공됨
 
-### Requirement: 마감일 알림 생성
+#### Scenario: 테스트 알림 발송
 
-The system SHALL create reminders when due dates are set.
+- **GIVEN** 사용자가 설정 화면에 있음
+- **WHEN** "테스트 알림 보내기" 버튼을 클릭함
+- **THEN** OS 네이티브 테스트 알림이 발송됨
+- **AND** 성공/실패 결과가 UI에 표시됨
 
-#### Scenario: 기본 알림 생성
+### Requirement: 태스크별 알림 생성
 
-- **GIVEN** 사용자가 태스크에 마감일을 설정함
-- **WHEN** 마감일이 저장됨
-- **THEN** 마감일 당일 기본 시간(설정값)에 알림이 예약됨
-- **AND** reminders 테이블에 레코드가 생성됨
+The system SHALL allow users to create reminders for individual tasks.
 
-#### Scenario: 마감일 변경 시 알림 업데이트
+#### Scenario: 알림 추가
 
-- **GIVEN** 태스크에 마감일과 알림이 설정되어 있음
-- **WHEN** 마감일을 변경함
-- **THEN** 기존 알림이 삭제됨
-- **AND** 새 마감일에 맞는 알림이 생성됨
+- **GIVEN** 사용자가 태스크 상세 패널을 열었음
+- **WHEN** 알림 시간(날짜+시간)을 선택하고 "추가" 버튼을 클릭함
+- **THEN** reminders 테이블에 레코드가 생성됨
+- **AND** 알림 목록에 새 알림이 표시됨
 
-#### Scenario: 마감일 삭제 시 알림 삭제
+#### Scenario: 알림 삭제
 
-- **GIVEN** 태스크에 마감일과 알림이 설정되어 있음
-- **WHEN** 마감일을 삭제함
-- **THEN** 관련 알림도 함께 삭제됨
+- **GIVEN** 태스크에 알림이 설정되어 있음
+- **WHEN** 알림 옆 삭제(X) 버튼을 클릭함
+- **THEN** 해당 알림이 삭제됨
+- **AND** 알림 목록에서 제거됨
+
+#### Scenario: 복수 알림 지원
+
+- **GIVEN** 태스크에 알림이 설정되어 있음
+- **WHEN** 새로운 알림 시간을 추가함
+- **THEN** 기존 알림은 유지됨
+- **AND** 새 알림이 추가됨
+
+#### Scenario: 과거 시간 알림 방지
+
+- **GIVEN** 사용자가 알림을 추가하려 함
+- **WHEN** 현재 시간보다 과거의 시간을 선택함
+- **THEN** 알림이 생성되지 않음
+- **AND** 경고 메시지가 표시됨
 
 ### Requirement: 알림 발송
 
@@ -71,17 +86,6 @@ The system SHALL send OS native notifications at scheduled times.
 - **WHEN** 앱이 시작됨
 - **THEN** 누락된 알림이 즉시 발송됨
 
-### Requirement: 알림 커스터마이징
-
-The system SHALL allow users to customize reminder times.
-
-#### Scenario: 기본 알림 시간 설정
-
-- **GIVEN** 사용자가 설정 화면에 있음
-- **WHEN** 기본 알림 시간을 "09:00"에서 "08:00"으로 변경함
-- **THEN** 새로 생성되는 알림에 해당 시간이 적용됨
-- **AND** 기존 알림은 변경되지 않음
-
 ### Requirement: 완료된 태스크 알림 무시
 
 The system SHALL not send notifications for completed tasks.
@@ -96,5 +100,4 @@ The system SHALL not send notifications for completed tasks.
 ## Dependencies
 
 - [task-management](../task-management/spec.md): 태스크 마감일
-- [vault-storage](../vault-storage/spec.md): 설정 저장
 - Tauri plugin-notification

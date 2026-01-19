@@ -10,6 +10,11 @@ import {
   getSaveStatusColor,
 } from '../editor';
 import { EditorContent } from '@tiptap/react';
+import {
+  useReminders,
+  useCreateReminder,
+  useDeleteReminder,
+} from '../notifications';
 
 interface TaskDetailPanelProps {
   task: Task;
@@ -43,9 +48,15 @@ export function TaskDetailPanel({
 }: TaskDetailPanelProps) {
   const [title, setTitle] = useState(task.title);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [reminderInput, setReminderInput] = useState('');
   const panelRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
+
+  // 리마인더 데이터
+  const { data: reminders = [] } = useReminders(task.id);
+  const createReminder = useCreateReminder();
+  const deleteReminder = useDeleteReminder();
 
   // 자동 저장 핸들러
   const handleSaveContent = useCallback(
@@ -182,10 +193,42 @@ export function TaskDetailPanel({
     onUpdate({ status: e.target.value as TaskStatus });
   };
 
+  // 알림 추가
+  const handleAddReminder = () => {
+    if (!reminderInput) return;
+
+    const remindAt = new Date(reminderInput);
+    if (remindAt <= new Date()) {
+      alert('알림 시간은 현재 시간 이후여야 합니다.');
+      return;
+    }
+
+    createReminder.mutate({
+      taskId: task.id,
+      remindAt,
+    });
+    setReminderInput('');
+  };
+
+  // 알림 삭제
+  const handleDeleteReminder = (reminderId: string) => {
+    deleteReminder.mutate({ id: reminderId, taskId: task.id });
+  };
+
   const formatDateForInput = (date: Date | null): string => {
     if (!date) return '';
     const d = new Date(date);
     return d.toISOString().split('T')[0] ?? '';
+  };
+
+  const formatDateTimeForInput = (date: Date): string => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   const formatDateTime = (date: Date | null): string => {
@@ -198,6 +241,18 @@ export function TaskDetailPanel({
       minute: '2-digit',
     });
   };
+
+  const formatReminderTime = (date: Date): string => {
+    return new Date(date).toLocaleString('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  // 미발송 알림만 필터링
+  const pendingReminders = reminders.filter((r) => !r.isSent);
 
   if (!isOpen) return null;
 
@@ -333,6 +388,80 @@ export function TaskDetailPanel({
                 onChange={handleDueDateChange}
                 className="flex-1 px-3 py-1.5 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
+            </div>
+
+            {/* Reminder */}
+            <div className="flex items-start gap-3">
+              <label className="w-20 text-sm text-gray-500 pt-1.5">알림</label>
+              <div className="flex-1 space-y-2">
+                {/* 기존 알림 목록 */}
+                {pendingReminders.length > 0 && (
+                  <div className="space-y-1">
+                    {pendingReminders.map((reminder) => (
+                      <div
+                        key={reminder.id}
+                        className="flex items-center justify-between px-3 py-1.5 bg-indigo-50 rounded-md"
+                      >
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-4 h-4 text-indigo-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                            />
+                          </svg>
+                          <span className="text-sm text-indigo-700">
+                            {formatReminderTime(reminder.remindAt)}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteReminder(reminder.id)}
+                          className="p-1 text-indigo-400 hover:text-red-500 transition-colors"
+                          title="알림 삭제"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 새 알림 추가 */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="datetime-local"
+                    value={reminderInput}
+                    onChange={(e) => setReminderInput(e.target.value)}
+                    min={formatDateTimeForInput(new Date())}
+                    className="flex-1 px-3 py-1.5 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button
+                    onClick={handleAddReminder}
+                    disabled={!reminderInput || createReminder.isPending}
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    추가
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 

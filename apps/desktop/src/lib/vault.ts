@@ -17,7 +17,6 @@ const APP_CONFIG_FILE = 'app-config.json';
 export interface TaskdownConfig {
   version: string;
   theme: 'light' | 'dark' | 'system';
-  defaultReminderTime: string;
   createdAt: string;
 }
 
@@ -39,7 +38,6 @@ function getDefaultConfig(): TaskdownConfig {
   return {
     version: '1.0.0',
     theme: 'system',
-    defaultReminderTime: '09:00',
     createdAt: new Date().toISOString(),
   };
 }

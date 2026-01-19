@@ -1,52 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAppStore } from '../stores';
-import { loadVaultConfig, saveVaultConfig, type TaskdownConfig } from '../lib/vault';
-import { requestNotificationPermission } from '../features/notifications';
+import {
+  requestNotificationPermission,
+  sendTaskNotification,
+} from '../features/notifications';
 
 export function SettingsView() {
   const { vaultPath, notificationPermission, setNotificationPermission } = useAppStore();
-  const [config, setConfig] = useState<TaskdownConfig | null>(null);
-  const [defaultReminderTime, setDefaultReminderTime] = useState('09:00');
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Vault 설정 불러오기
-  useEffect(() => {
-    async function loadConfig() {
-      if (!vaultPath) return;
-      const loadedConfig = await loadVaultConfig(vaultPath);
-      if (loadedConfig) {
-        setConfig(loadedConfig);
-        setDefaultReminderTime(loadedConfig.defaultReminderTime || '09:00');
-      }
-    }
-    loadConfig();
-  }, [vaultPath]);
-
-  // 알림 시간 변경 핸들러
-  const handleReminderTimeChange = async (newTime: string) => {
-    setDefaultReminderTime(newTime);
-
-    if (!vaultPath || !config) return;
-
-    setIsSaving(true);
-    try {
-      const newConfig: TaskdownConfig = {
-        ...config,
-        defaultReminderTime: newTime,
-      };
-      await saveVaultConfig(vaultPath, newConfig);
-      setConfig(newConfig);
-    } catch (error) {
-      console.error('Failed to save config:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  const [isTestingSending, setIsTestingSending] = useState(false);
+  const [testResult, setTestResult] = useState<'success' | 'failed' | null>(null);
 
   // 알림 권한 요청 핸들러
   const handleRequestPermission = async () => {
     const permission = await requestNotificationPermission();
     setNotificationPermission(permission);
+  };
+
+  // 테스트 알림 발송 핸들러
+  const handleTestNotification = async () => {
+    setIsTestingSending(true);
+    setTestResult(null);
+
+    try {
+      const success = await sendTaskNotification('테스트 알림', {
+        body: '알림이 정상적으로 작동합니다!',
+      });
+      setTestResult(success ? 'success' : 'failed');
+    } catch {
+      setTestResult('failed');
+    } finally {
+      setIsTestingSending(false);
+    }
+
+    // 3초 후 결과 메시지 숨기기
+    setTimeout(() => setTestResult(null), 3000);
   };
 
   // 알림 권한 상태 표시 텍스트
@@ -137,23 +124,26 @@ export function SettingsView() {
                 </div>
               )}
 
-              {/* 기본 알림 시간 */}
+              {/* 테스트 알림 */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">기본 알림 시간</p>
-                  <p className="text-sm text-gray-500 mt-1">마감일 당일 알림 시간</p>
+                  <p className="text-sm font-medium text-gray-700">테스트 알림</p>
+                  <p className="text-sm text-gray-500 mt-1">알림이 정상 작동하는지 확인</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="time"
-                    value={defaultReminderTime}
-                    onChange={(e) => handleReminderTimeChange(e.target.value)}
-                    disabled={isSaving}
-                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50"
-                  />
-                  {isSaving && (
-                    <span className="text-xs text-gray-500">저장 중...</span>
+                <div className="flex items-center gap-3">
+                  {testResult === 'success' && (
+                    <span className="text-sm text-green-600">전송 성공!</span>
                   )}
+                  {testResult === 'failed' && (
+                    <span className="text-sm text-red-600">전송 실패</span>
+                  )}
+                  <button
+                    onClick={handleTestNotification}
+                    disabled={isTestingSending}
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {isTestingSending ? '전송 중...' : '테스트 알림 보내기'}
+                  </button>
                 </div>
               </div>
             </div>
