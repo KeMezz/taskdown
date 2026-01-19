@@ -55,10 +55,16 @@ export function TaskDetailPanel({
     [onUpdate]
   );
 
-  const { status: saveStatus, debouncedSave } = useAutoSave({
+  const { status: saveStatus, debouncedSave, flushSave } = useAutoSave({
     onSave: handleSaveContent,
     debounceMs: 500,
   });
+
+  // 패널 닫기 전 저장 플러시
+  const handleClose = useCallback(async () => {
+    await flushSave();
+    onClose();
+  }, [flushSave, onClose]);
 
   // 에디터 콘텐츠 업데이트 핸들러
   const handleEditorUpdate = useCallback(
@@ -95,13 +101,13 @@ export function TaskDetailPanel({
           editor.commands.blur();
           return;
         }
-        onClose();
+        handleClose();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, editor]);
+  }, [isOpen, handleClose, editor]);
 
   // 바깥 클릭으로 닫기
   useEffect(() => {
@@ -111,7 +117,7 @@ export function TaskDetailPanel({
         !panelRef.current.contains(e.target as Node) &&
         isOpen
       ) {
-        onClose();
+        handleClose();
       }
     };
 
@@ -124,7 +130,7 @@ export function TaskDetailPanel({
       clearTimeout(timeoutId);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
 
   // 제목 편집 시 포커스
   useEffect(() => {
@@ -226,7 +232,7 @@ export function TaskDetailPanel({
               </svg>
             </button>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
               title="닫기 (Esc)"
             >

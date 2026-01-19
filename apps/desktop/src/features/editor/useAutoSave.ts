@@ -25,6 +25,7 @@ export function useAutoSave({
   const timeoutRef = useRef<number | null>(null);
   const savedTimeoutRef = useRef<number | null>(null);
   const pendingContentRef = useRef<JSONContent | null>(null);
+  const debouncedContentRef = useRef<JSONContent | null>(null);
   const isSavingRef = useRef(false);
 
   // cleanup
@@ -84,7 +85,11 @@ export function useAutoSave({
         clearTimeout(timeoutRef.current);
       }
 
+      // 디바운스 대기 중인 콘텐츠 추적
+      debouncedContentRef.current = content;
+
       timeoutRef.current = window.setTimeout(() => {
+        debouncedContentRef.current = null;
         saveContent(content);
       }, debounceMs);
     },
@@ -92,12 +97,21 @@ export function useAutoSave({
   );
 
   const flushSave = useCallback(async () => {
-    // 타임아웃 취소하고 즉시 저장
+    // 타임아웃 취소
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
 
+    // 디바운스 대기 중인 콘텐츠가 있으면 즉시 저장
+    if (debouncedContentRef.current) {
+      const content = debouncedContentRef.current;
+      debouncedContentRef.current = null;
+      await saveContent(content);
+      return;
+    }
+
+    // 저장 중 대기열에 있는 콘텐츠 처리
     if (pendingContentRef.current) {
       const content = pendingContentRef.current;
       pendingContentRef.current = null;
