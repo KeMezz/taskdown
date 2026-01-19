@@ -329,7 +329,6 @@ async fn run_sql(
 interface TaskdownConfig {
   version: string;           // "1.0.0"
   theme: 'light' | 'dark' | 'system';
-  defaultReminderTime: string;  // "09:00"
   createdAt: string;         // ISO 8601
 }
 ```

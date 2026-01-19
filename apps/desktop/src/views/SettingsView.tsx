@@ -1,7 +1,66 @@
+import { useState } from 'react';
 import { useAppStore } from '../stores';
+import {
+  requestNotificationPermission,
+  sendTaskNotification,
+} from '../features/notifications';
 
 export function SettingsView() {
-  const { vaultPath } = useAppStore();
+  const { vaultPath, notificationPermission, setNotificationPermission } = useAppStore();
+  const [isTestingSending, setIsTestingSending] = useState(false);
+  const [testResult, setTestResult] = useState<'success' | 'failed' | null>(null);
+
+  // 알림 권한 요청 핸들러
+  const handleRequestPermission = async () => {
+    const permission = await requestNotificationPermission();
+    setNotificationPermission(permission);
+  };
+
+  // 테스트 알림 발송 핸들러
+  const handleTestNotification = async () => {
+    setIsTestingSending(true);
+    setTestResult(null);
+
+    try {
+      const success = await sendTaskNotification('테스트 알림', {
+        body: '알림이 정상적으로 작동합니다!',
+      });
+      setTestResult(success ? 'success' : 'failed');
+    } catch {
+      setTestResult('failed');
+    } finally {
+      setIsTestingSending(false);
+    }
+
+    // 3초 후 결과 메시지 숨기기
+    setTimeout(() => setTestResult(null), 3000);
+  };
+
+  // 알림 권한 상태 표시 텍스트
+  const getPermissionStatusText = () => {
+    switch (notificationPermission) {
+      case 'granted':
+        return '허용됨';
+      case 'denied':
+        return '거부됨';
+      case 'default':
+        return '설정되지 않음';
+      default:
+        return '확인 중...';
+    }
+  };
+
+  // 알림 권한 상태 색상
+  const getPermissionStatusColor = () => {
+    switch (notificationPermission) {
+      case 'granted':
+        return 'text-green-600 bg-green-50';
+      case 'denied':
+        return 'text-red-600 bg-red-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col">
@@ -32,17 +91,60 @@ export function SettingsView() {
             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
               알림 설정
             </h3>
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
+              {/* 알림 권한 상태 */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">기본 알림 시간</p>
-                  <p className="text-sm text-gray-500 mt-1">마감일 당일 알림 시간</p>
+                  <p className="text-sm font-medium text-gray-700">알림 권한</p>
+                  <p className="text-sm text-gray-500 mt-1">OS 알림 표시 권한</p>
                 </div>
-                <input
-                  type="time"
-                  defaultValue="09:00"
-                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${getPermissionStatusColor()}`}
+                  >
+                    {getPermissionStatusText()}
+                  </span>
+                  {notificationPermission !== 'granted' && (
+                    <button
+                      onClick={handleRequestPermission}
+                      className="px-3 py-1.5 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                    >
+                      권한 요청
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 권한 거부 시 안내 */}
+              {notificationPermission === 'denied' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <p className="text-sm text-yellow-800">
+                    알림 권한이 거부되었습니다. 마감일 알림을 받으려면 시스템 설정에서 Taskdown의 알림 권한을 허용해주세요.
+                  </p>
+                </div>
+              )}
+
+              {/* 테스트 알림 */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">테스트 알림</p>
+                  <p className="text-sm text-gray-500 mt-1">알림이 정상 작동하는지 확인</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {testResult === 'success' && (
+                    <span className="text-sm text-green-600">전송 성공!</span>
+                  )}
+                  {testResult === 'failed' && (
+                    <span className="text-sm text-red-600">전송 실패</span>
+                  )}
+                  <button
+                    onClick={handleTestNotification}
+                    disabled={isTestingSending}
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {isTestingSending ? '전송 중...' : '테스트 알림 보내기'}
+                  </button>
+                </div>
               </div>
             </div>
           </section>

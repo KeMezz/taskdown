@@ -23,6 +23,11 @@ import {
 } from './features/tasks';
 import { TaskDetailPanel } from './features/task-detail';
 import { SettingsView, KanbanView } from './views';
+import {
+  checkNotificationPermission,
+  requestNotificationPermission,
+  useReminderScheduler,
+} from './features/notifications';
 
 interface ContextMenuState {
   project: import('@taskdown/db').Project;
@@ -31,7 +36,7 @@ interface ContextMenuState {
 }
 
 function AppContent() {
-  const { isReadOnly, migrationError } = useAppStore();
+  const { isReadOnly, migrationError, setNotificationPermission } = useAppStore();
   const { selectedProjectId, selectProject } = useSidebarStore();
   const { selectedTaskId, selectTask } = useTaskStore();
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
@@ -39,11 +44,30 @@ function AppContent() {
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<import('@taskdown/db').Project | null>(null);
 
+  // 알림 스케줄러 활성화
+  useReminderScheduler();
+
   // 프로젝트 데이터
   const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
   const createProject = useCreateProject();
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
+
+  // 앱 시작 시 알림 권한 확인
+  useEffect(() => {
+    async function initNotifications() {
+      // 알림 권한 상태 확인
+      let permission = await checkNotificationPermission();
+
+      // 권한이 설정되지 않았으면 자동으로 요청
+      if (permission === 'default') {
+        permission = await requestNotificationPermission();
+      }
+
+      setNotificationPermission(permission);
+    }
+    initNotifications();
+  }, [setNotificationPermission]);
 
   // 현재 프로젝트
   const currentProject =
