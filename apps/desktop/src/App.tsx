@@ -6,7 +6,11 @@ import { MainLayout } from './features/layout';
 import {
   useProjects,
   useCreateProject,
+  useUpdateProject,
+  useDeleteProject,
   ProjectDialog,
+  ProjectContextMenu,
+  ConfirmDialog,
 } from './features/projects';
 import {
   useTasks,
@@ -20,15 +24,26 @@ import {
 import { TaskDetailPanel } from './features/task-detail';
 import { SettingsView, KanbanView } from './views';
 
+interface ContextMenuState {
+  project: import('@taskdown/db').Project;
+  x: number;
+  y: number;
+}
+
 function AppContent() {
   const { isReadOnly, migrationError } = useAppStore();
   const { selectedProjectId, selectProject } = useSidebarStore();
   const { selectedTaskId, selectTask } = useTaskStore();
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<import('@taskdown/db').Project | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<import('@taskdown/db').Project | null>(null);
 
   // 프로젝트 데이터
   const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
   const createProject = useCreateProject();
+  const updateProject = useUpdateProject();
+  const deleteProject = useDeleteProject();
 
   // 현재 프로젝트
   const currentProject =
@@ -58,6 +73,38 @@ function AppContent() {
     if (isReadOnly) return;
     const project = await createProject.mutateAsync(data);
     selectProject(project.id);
+  };
+
+  const handleEditProject = async (data: { name: string; color: string }) => {
+    if (isReadOnly || !editingProject) return;
+    await updateProject.mutateAsync({
+      id: editingProject.id,
+      data: { name: data.name, color: data.color },
+    });
+    setEditingProject(null);
+  };
+
+  const handleRenameProject = (project: import('@taskdown/db').Project) => {
+    if (isReadOnly) return;
+    setEditingProject(project);
+  };
+
+  const handleDeleteProject = (project: import('@taskdown/db').Project) => {
+    if (isReadOnly) return;
+    setDeleteConfirm(project);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirm || isReadOnly) return;
+    const projectId = deleteConfirm.id;
+
+    // 삭제할 프로젝트가 현재 선택된 프로젝트면 Inbox로 이동
+    if (selectedProjectId === projectId) {
+      selectProject(null);
+    }
+
+    await deleteProject.mutateAsync(projectId);
+    setDeleteConfirm(null);
   };
 
   const handleNewTask = (title: string) => {
@@ -116,6 +163,21 @@ function AppContent() {
       projectId: effectiveProjectId,
     });
   };
+
+  // 컨텍스트 메뉴 이벤트 리스너
+  useEffect(() => {
+    const handleContextMenuEvent = (e: Event) => {
+      const customEvent = e as CustomEvent<{ project: import('@taskdown/db').Project; x: number; y: number }>;
+      setContextMenu({
+        project: customEvent.detail.project,
+        x: customEvent.detail.x,
+        y: customEvent.detail.y,
+      });
+    };
+
+    window.addEventListener('project-context-menu', handleContextMenuEvent);
+    return () => window.removeEventListener('project-context-menu', handleContextMenuEvent);
+  }, []);
 
   // 키보드 단축키
   useEffect(() => {
@@ -178,15 +240,51 @@ function AppContent() {
       <MainLayout
         projects={projects}
         onNewProject={handleNewProject}
+        onRenameProject={handleRenameProject}
+        onDeleteProject={handleDeleteProject}
         isLoadingProjects={isLoadingProjects}
       >
         {renderCurrentView()}
       </MainLayout>
 
+      {/* 새 프로젝트 다이얼로그 */}
       <ProjectDialog
         isOpen={isProjectDialogOpen}
         onClose={() => setIsProjectDialogOpen(false)}
         onSubmit={handleCreateProject}
+        title="새 프로젝트"
+      />
+
+      {/* 프로젝트 이름 변경 다이얼로그 */}
+      <ProjectDialog
+        isOpen={!!editingProject}
+        onClose={() => setEditingProject(null)}
+        onSubmit={handleEditProject}
+        initialData={editingProject ? { name: editingProject.name, color: editingProject.color || '#6366f1' } : undefined}
+        title="프로젝트 편집"
+      />
+
+      {/* 프로젝트 컨텍스트 메뉴 */}
+      {contextMenu && (
+        <ProjectContextMenu
+          project={contextMenu.project}
+          position={{ x: contextMenu.x, y: contextMenu.y }}
+          onClose={() => setContextMenu(null)}
+          onRename={handleRenameProject}
+          onDelete={handleDeleteProject}
+        />
+      )}
+
+      {/* 프로젝트 삭제 확인 다이얼로그 */}
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        title="프로젝트 삭제"
+        message={`"${deleteConfirm?.name}" 프로젝트를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
+        confirmLabel="삭제"
+        cancelLabel="취소"
+        variant="danger"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteConfirm(null)}
       />
 
       {/* Task Detail Panel */}

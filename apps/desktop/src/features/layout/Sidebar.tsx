@@ -4,11 +4,30 @@ import type { Project } from '@taskdown/db';
 interface SidebarProps {
   projects: Project[];
   onNewProject: () => void;
+  onRenameProject?: (project: Project) => void;
+  onDeleteProject?: (project: Project) => void;
   isLoading?: boolean;
 }
 
-export function Sidebar({ projects, onNewProject, isLoading = false }: SidebarProps) {
+export function Sidebar({
+  projects,
+  onNewProject,
+  onRenameProject,
+  onDeleteProject,
+  isLoading = false,
+}: SidebarProps) {
   const { selectedProjectId, selectProject, isCollapsed, toggleCollapsed } = useSidebarStore();
+
+  const handleContextMenu = (e: React.MouseEvent, project: Project) => {
+    e.preventDefault();
+    if (onRenameProject && onDeleteProject) {
+      // 컨텍스트 메뉴 이벤트를 부모에게 전달
+      const event = new CustomEvent('project-context-menu', {
+        detail: { project, x: e.clientX, y: e.clientY },
+      });
+      window.dispatchEvent(event);
+    }
+  };
 
   if (isCollapsed) {
     return (
@@ -89,6 +108,7 @@ export function Sidebar({ projects, onNewProject, isLoading = false }: SidebarPr
                 <li key={project.id}>
                   <button
                     onClick={() => selectProject(project.id)}
+                    onContextMenu={(e) => handleContextMenu(e, project)}
                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
                       selectedProjectId === project.id
                         ? 'bg-indigo-100 text-indigo-700'
