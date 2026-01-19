@@ -62,8 +62,18 @@ export function TaskDetailPanel({
 
   // 패널 닫기 전 저장 플러시
   const handleClose = useCallback(async () => {
-    await flushSave();
-    onClose();
+    try {
+      await flushSave();
+      onClose();
+    } catch (error) {
+      console.error('Failed to save before closing:', error);
+      const shouldClose = window.confirm(
+        '변경 사항을 저장하는 데 실패했습니다. 그래도 닫으시겠습니까?'
+      );
+      if (shouldClose) {
+        onClose();
+      }
+    }
   }, [flushSave, onClose]);
 
   // 에디터 콘텐츠 업데이트 핸들러

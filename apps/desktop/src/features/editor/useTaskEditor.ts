@@ -55,6 +55,9 @@ export function useTaskEditor({
     editorProps: {
       attributes: {
         class: 'prose prose-sm focus:outline-none min-h-[200px] max-w-none',
+        role: 'textbox',
+        'aria-multiline': 'true',
+        'aria-label': '태스크 설명 편집기',
       },
     },
     onUpdate: ({ editor }) => {
