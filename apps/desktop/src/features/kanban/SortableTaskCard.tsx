@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Task, TaskStatus } from '@taskdown/db';
@@ -15,7 +16,7 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
   done: 'Done',
 };
 
-export function SortableTaskCard({
+export const SortableTaskCard = memo(function SortableTaskCard({
   task,
   onClick,
   onStatusChange,
@@ -111,4 +112,4 @@ export function SortableTaskCard({
       </div>
     </div>
   );
-}
+});

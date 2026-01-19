@@ -1,3 +1,4 @@
+import { memo, useCallback } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -39,7 +40,7 @@ const COLUMN_CONFIG: Record<
   },
 };
 
-export function KanbanColumn({
+export const KanbanColumn = memo(function KanbanColumn({
   status,
   tasks,
   onTaskClick,
@@ -52,6 +53,18 @@ export function KanbanColumn({
 
   const config = COLUMN_CONFIG[status];
   const taskIds = tasks.map((task) => task.id);
+
+  // useCallback으로 콜백 메모이제이션
+  const handleTaskClick = useCallback(
+    (taskId: string) => () => onTaskClick(taskId),
+    [onTaskClick]
+  );
+
+  const handleStatusChange = useCallback(
+    (taskId: string) => (newStatus: TaskStatus) =>
+      onTaskStatusChange(taskId, newStatus),
+    [onTaskStatusChange]
+  );
 
   return (
     <div
@@ -82,10 +95,8 @@ export function KanbanColumn({
               <SortableTaskCard
                 key={task.id}
                 task={task}
-                onClick={() => onTaskClick(task.id)}
-                onStatusChange={(newStatus) =>
-                  onTaskStatusChange(task.id, newStatus)
-                }
+                onClick={handleTaskClick(task.id)}
+                onStatusChange={handleStatusChange(task.id)}
               />
             ))
           )}
@@ -93,4 +104,4 @@ export function KanbanColumn({
       </div>
     </div>
   );
-}
+});
